@@ -1,0 +1,28 @@
+{
+  "name": "wedding-style-ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "job:product-sync": "tsx jobs/product-sync.ts",
+    "job:price-update": "tsx jobs/price-update.ts",
+    "job:review-refresh": "tsx jobs/review-refresh.ts",
+    "job:embedding-generation": "tsx jobs/embedding-generation.ts",
+    "job:ranking-recalculation": "tsx jobs/ranking-recalculation.ts"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

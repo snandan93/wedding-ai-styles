@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AI-assisted Indian wedding outfit recommendations for every celebration." />
+    <title>Vow & Vogue — AI Wedding Stylist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #260a1b;
+        --plum: #3a0f2a;
+        --wine: #5a1c3e;
+        --rose: #a83e67;
+        --rose-soft: #f8e7ed;
+        --cream: #fffaf5;
+        --sand: #f4ece2;
+        --gold: #c99a51;
+        --terracotta: #bf704e;
+        --muted: #806d62;
+        --border: #eadacd;
+        --white: #ffffff;
+        --shadow: 0 18px 45px rgba(48, 21, 33, .11);
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; color: var(--ink); background: var(--cream); font-family: "DM Sans", sans-serif; }
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+      a { color: inherit; text-decoration: none; }
+
+      .site-header { position: absolute; z-index: 10; top: 0; left: 0; right: 0; padding: 24px max(28px, calc((100vw - 1240px) / 2)); display: flex; justify-content: space-between; align-items: center; color: #fffaf5; }
+      .brand { display: flex; align-items: center; gap: 10px; font-family: "Playfair Display", serif; font-size: 21px; letter-spacing: -.03em; }
+      .brand-mark { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.45); border-radius: 50%; color: #f4ca82; font-size: 17px; }
+      .nav { display: flex; align-items: center; gap: 28px; font-size: 13px; color: rgba(255,250,245,.76); }
+      .nav a:hover { color: #fff; }
+      .nav .nav-action { border: 1px solid rgba(255,255,255,.38); padding: 10px 16px; border-radius: 999px; color: #fff; }
+
+      .hero { min-height: 800px; position: relative; overflow: hidden; background: #350d27; color: #fffaf5; isolation: isolate; }
+      .hero::after { content: ""; position: absolute; z-index: -1; width: 780px; height: 780px; right: -260px; top: -200px; border-radius: 50%; background: radial-gradient(circle, rgba(176, 80, 117, .44) 0%, rgba(90, 28, 62, .12) 48%, transparent 70%); }
+      .hero::before { content: ""; position: absolute; inset: 0; opacity: .28; background-image: linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px); background-size: 58px 58px; mask-image: linear-gradient(to bottom, black, transparent); }
+      .hero-inner { width: min(1240px, calc(100% - 56px)); margin: 0 auto; min-height: 800px; padding: 150px 0 92px; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(420px, .92fr); align-items: center; gap: clamp(30px, 5vw, 70px); position: relative; }
+      .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: #e9bd72; font-size: 11px; letter-spacing: .16em; font-weight: 700; text-transform: uppercase; }
+      .eyebrow::before { content: ""; width: 23px; height: 1px; background: currentColor; }
+      h1 { margin: 18px 0 22px; max-width: 625px; font-family: "Playfair Display", serif; font-size: clamp(48px, 5.1vw, 72px); font-weight: 500; letter-spacing: -.057em; line-height: 1.01; }
+      h1 em { color: #e9bd72; font-weight: 500; }
+      .hero-copy { max-width: 490px; color: rgba(255,250,245,.68); font-size: 16px; line-height: 1.75; }
+      .hero-actions { margin-top: 34px; display: flex; gap: 13px; align-items: center; }
+      .button { border: 0; border-radius: 999px; min-height: 52px; padding: 0 23px; display: inline-flex; justify-content: center; align-items: center; gap: 9px; font-weight: 700; font-size: 13px; transition: transform .2s ease, box-shadow .2s ease; }
+      .button:hover { transform: translateY(-2px); }
+      .button.primary { color: #2c1320; background: linear-gradient(100deg, #e1b967, #cc8656); box-shadow: 0 10px 25px rgba(205,137,76,.25); }
+      .button.ghost { color: #fffaf5; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.21); }
+      .hero-proof { margin-top: 52px; display: flex; gap: 18px; align-items: center; color: rgba(255,250,245,.55); font-size: 11px; }
+      .avatars { display: flex; }
+      .avatars span { width: 26px; height: 26px; border: 2px solid #481d37; border-radius: 50%; margin-left: -6px; display: block; background-size: cover; background-position: center; }
+      .avatars span:first-child { margin-left: 0; }
+
+      .look-preview { --tilt-x: 0deg; --tilt-y: 0deg; height: 530px; position: relative; perspective: 1300px; }
+      .hero-image-frame { position: absolute; z-index: 1; top: 0; right: 14px; width: min(404px, 79%); height: 520px; transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y)); transform-style: preserve-3d; transition: transform .35s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+      .photo-main { display: block; width: 100%; height: 100%; border: 1px solid rgba(236, 189, 121, .42); border-radius: 202px 202px 22px 22px; object-fit: cover; object-position: 50% 12%; box-shadow: 22px 30px 0 rgba(83, 22, 55, .56), 0 34px 72px rgba(11,3,9,.48); transform: translateZ(24px); transition: opacity .28s ease, transform .28s ease, filter .35s ease, box-shadow .35s ease; }
+      .photo-sheen { position: absolute; inset: 1px; pointer-events: none; border-radius: 202px 202px 22px 22px; background: linear-gradient(120deg, rgba(255,255,255,.26), transparent 28%, transparent 70%, rgba(225,180,105,.16)); mix-blend-mode: screen; transform: translateZ(35px); }
+      .hero-image-frame.is-switching .photo-main { opacity: 0; transform: translateZ(24px) scale(.96) rotateY(-8deg); }
+      .hero-image-frame.is-switching .photo-sheen { opacity: 0; }
+      .look-preview:hover .photo-main { filter: saturate(1.08) brightness(1.05); box-shadow: 29px 39px 0 rgba(83, 22, 55, .55), 0 44px 85px rgba(11,3,9,.55); animation: image-bounce .68s cubic-bezier(.17,.67,.34,1.45); }
+      .gold-ring { position: absolute; z-index: 0; right: -42px; top: 46px; width: 418px; height: 418px; border-radius: 50%; border: 1px solid rgba(235,193,120,.38); transition: transform .5s ease; }
+      .gold-ring::after { content: ""; position: absolute; inset: 18px; border: 1px solid rgba(235,193,120,.17); border-radius: inherit; }
+      .look-preview:hover .gold-ring { transform: rotate(12deg) scale(1.03); }
+      .floating-card { position: absolute; z-index: 3; width: 230px; padding: 15px; display: flex; gap: 11px; align-items: center; background: rgba(255,251,246,.95); color: var(--ink); box-shadow: 0 16px 35px rgba(20,4,16,.25); border: 1px solid rgba(255,255,255,.55); border-radius: 13px; backdrop-filter: blur(8px); transform: translateZ(65px); transition: transform .25s ease, box-shadow .25s ease; }
+      .floating-card.top { left: -18px; top: 90px; }
+      .floating-card.bottom { left: 8px; bottom: 10px; width: 250px; }
+      .look-preview:hover .floating-card.top { animation: card-bounce .65s .05s cubic-bezier(.17,.67,.34,1.35); }
+      .look-preview:hover .floating-card.bottom { animation: card-bounce .65s .14s cubic-bezier(.17,.67,.34,1.35); }
+      .card-icon { width: 35px; height: 35px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 10px; background: #fbefcf; font-size: 17px; }
+      .floating-card small { color: #8d786b; display: block; font-size: 10px; margin-bottom: 3px; }
+      .floating-card strong { display: block; font-size: 12px; line-height: 1.35; }
+      .match-line { height: 5px; background: #eadbd0; width: 90px; margin-top: 7px; overflow: hidden; border-radius: 8px; }
+      .match-line span { display: block; width: 89%; height: 100%; background: linear-gradient(90deg, var(--rose), #e2b363); border-radius: inherit; }
+      .scroll-hint { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); color: rgba(255,250,245,.42); font-size: 10px; letter-spacing: .13em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+      .scroll-hint i { width: 19px; height: 30px; border: 1px solid rgba(255,255,255,.35); border-radius: 14px; position: relative; }
+      .scroll-hint i::after { content: ""; width: 3px; height: 5px; border-radius: 4px; background: #e2b363; position: absolute; top: 6px; left: 7px; animation: scroll 1.6s infinite; }
+      @keyframes scroll { 50% { transform: translateY(10px); opacity: .2; } }
+      @keyframes image-bounce { 0%, 100% { transform: translateZ(24px) translateY(0); } 42% { transform: translateZ(54px) translateY(-14px); } 72% { transform: translateZ(32px) translateY(3px); } }
+      @keyframes card-bounce { 0%, 100% { transform: translateZ(65px) translateY(0); } 45% { transform: translateZ(90px) translateY(-10px); } 74% { transform: translateZ(72px) translateY(2px); } }
+
+      .trust { width: min(1184px, calc(100% - 56px)); margin: -40px auto 0; position: relative; z-index: 3; background: #fffdf9; border-radius: 15px; box-shadow: var(--shadow); min-height: 88px; display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); align-items: center; }
+      .trust-intro { padding: 20px 29px; border-right: 1px solid var(--border); }
+      .trust-intro span { color: var(--rose); text-transform: uppercase; letter-spacing: .12em; font-size: 9px; font-weight: 700; }
+      .trust-intro b { display: block; margin-top: 5px; font-family: "Playfair Display", serif; font-size: 18px; font-weight: 600; }
+      .trust-stat { padding: 12px 24px; border-right: 1px solid var(--border); }
+      .trust-stat:last-child { border-right: 0; }
+      .trust-stat strong { display: block; font-family: "Playfair Display", serif; font-size: 25px; color: var(--plum); font-weight: 600; }
+      .trust-stat span { color: var(--muted); font-size: 11px; }
+
+      /* AI stylist studio — intentionally dark to contrast the editorial hero */
+      .ai-studio { position: relative; overflow: hidden; padding: 104px 0 112px; color: #f7f1ff; background: #080711; }
+      .ai-studio::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .55; background-image: linear-gradient(rgba(142, 98, 255, .09) 1px, transparent 1px), linear-gradient(90deg, rgba(142, 98, 255, .09) 1px, transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(to bottom, transparent, #000 13%, #000 84%, transparent); }
+      .ai-studio::after { content: ""; position: absolute; z-index: 0; width: 600px; height: 460px; left: -220px; bottom: -310px; border-radius: 50%; background: radial-gradient(circle, rgba(0, 207, 248, .2), transparent 68%); }
+      .ai-studio-shell { width: min(1120px, calc(100% - 56px)); min-height: 650px; margin: 0 auto; position: relative; z-index: 1; display: grid; grid-template-columns: .93fr 1.07fr; overflow: hidden; border: 1px solid rgba(141, 102, 249, .35); border-radius: 28px; background: rgba(10, 8, 20, .9); box-shadow: 0 0 0 1px rgba(93, 59, 173, .15), 0 30px 80px rgba(0, 0, 0, .4), inset 0 1px rgba(255,255,255,.04); }
+      .ai-chat { min-height: 650px; padding: 30px; position: relative; display: flex; flex-direction: column; background: linear-gradient(145deg, rgba(31, 15, 66, .72), rgba(8, 8, 18, .92)); border-right: 1px solid rgba(141, 102, 249, .24); }
+      .ai-chat-header { display: flex; align-items: center; gap: 13px; }
+      .ai-orb { width: 42px; height: 42px; border-radius: 50%; position: relative; background: conic-gradient(#37d7ff, #7a4cff, #ec48bb, #37d7ff); box-shadow: 0 0 27px rgba(123, 76, 255, .7); }
+      .ai-orb::after { content: ""; position: absolute; inset: 7px; border-radius: inherit; background: #0a0815; }
+      .ai-chat-brand small, .ai-result-kicker { display: block; color: #aaa0c5; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+      .ai-chat-brand strong { display: block; color: #a98aff; font-size: 16px; margin-top: 2px; }
+      .ai-listening { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; color: #bc9dff; font-size: 10px; font-weight: 700; }
+      .ai-listening::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #9b76ff; box-shadow: 0 0 12px #9b76ff; animation: pulse-dot 1.5s infinite; }
+      @keyframes pulse-dot { 50% { transform: scale(1.5); opacity: .45; } }
+      .ai-messages { flex: 1; display: flex; flex-direction: column; gap: 15px; padding: 32px 0 18px; }
+      .message { max-width: 90%; padding: 17px 18px; border: 1px solid rgba(141, 102, 249, .4); border-radius: 18px 18px 18px 5px; color: #e7e0f9; background: rgba(25, 13, 51, .64); font-size: 16px; line-height: 1.48; box-shadow: inset 0 1px rgba(255,255,255,.04); }
+      .message strong { color: #fff; }
+      .message.user { align-self: flex-end; border-radius: 18px 18px 5px 18px; background: linear-gradient(135deg, #824cff, #5624bb); border-color: transparent; color: #fff; box-shadow: 0 9px 24px rgba(96, 43, 210, .35); }
+      .ai-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+      .ai-chip { border: 1px solid rgba(147, 112, 255, .48); border-radius: 999px; padding: 8px 11px; color: #cbbcff; background: rgba(21, 15, 40, .68); font-size: 11px; font-weight: 600; transition: .2s; }
+      .ai-chip:hover, .ai-chip.is-selected { color: #fff; border-color: #a675ff; box-shadow: 0 0 17px rgba(148, 91, 255, .35); transform: translateY(-2px); }
+      .ai-composer { display: flex; gap: 10px; margin-top: 22px; }
+      .ai-composer input { min-width: 0; flex: 1; border: 1px solid rgba(147, 112, 255, .45); border-radius: 999px; outline: none; padding: 14px 16px; color: #fff; background: rgba(6, 5, 14, .76); font-size: 12px; }
+      .ai-composer input::placeholder { color: #8d86a4; }
+      .ai-composer button { width: 47px; border: 0; border-radius: 50%; color: #130b25; background: linear-gradient(145deg, #bd8dff, #49c8ff); box-shadow: 0 0 25px rgba(92, 185, 255, .42); font-size: 18px; transition: transform .2s; }
+      .ai-composer button:hover { transform: translateY(-3px) scale(1.05); }
+      .ai-results { min-width: 0; position: relative; display: flex; flex-direction: column; padding: 32px 32px 18px; background: linear-gradient(160deg, rgba(13, 11, 24, .93), rgba(6, 7, 15, .98)); }
+      .ai-results-top { display: flex; align-items: start; gap: 18px; }
+      .ai-results-top h2 { margin: 4px 0 0; font: 500 32px/1.08 "DM Sans", sans-serif; color: #fff; letter-spacing: -.05em; }
+      .match-orbit { width: 64px; height: 64px; margin-left: auto; display: grid; place-items: center; border-radius: 50%; position: relative; color: #35d6ff; background: conic-gradient(#32cbfb 0 94%, rgba(92, 77, 156, .25) 94% 100%); box-shadow: 0 0 24px rgba(49, 199, 253, .22); font-size: 14px; font-weight: 800; }
+      .match-orbit::before { content: ""; position: absolute; inset: 7px; border-radius: inherit; background: #0c0a17; }
+      .match-orbit span { position: relative; }
+      .ai-event-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin: 27px 0 15px; }
+      .ai-event-tab { min-height: 43px; border: 1px solid rgba(106, 88, 181, .45); border-radius: 999px; color: #a9a2bb; background: rgba(20, 17, 34, .65); font-weight: 700; font-size: 12px; transition: .2s; }
+      .ai-event-tab.is-active { color: #fff; border-color: #9562ff; background: linear-gradient(95deg, rgba(101, 53, 224, .66), rgba(40, 197, 248, .2)); box-shadow: 0 0 22px rgba(125, 75, 255, .25); }
+      .ai-thinking { min-height: 31px; display: flex; align-items: center; gap: 8px; color: #9f8ee3; font-size: 11px; }
+      .thinking-dots { display: inline-flex; gap: 3px; }
+      .thinking-dots i { width: 4px; height: 4px; border-radius: 50%; background: #bf94ff; animation: think 1.1s infinite ease-in-out; }
+      .thinking-dots i:nth-child(2) { animation-delay: .16s; }.thinking-dots i:nth-child(3) { animation-delay: .32s; }
+      @keyframes think { 50% { transform: translateY(-4px); opacity: .35; } }
+      .ai-look-feed { display: flex; flex-direction: column; gap: 11px; overflow: auto; max-height: 430px; padding-right: 3px; scrollbar-color: #4b347e transparent; }
+      .ai-look { position: relative; min-height: 126px; padding: 13px 14px 13px 13px; display: grid; grid-template-columns: 96px 1fr auto; column-gap: 15px; align-items: center; border: 1px solid rgba(112, 92, 174, .4); border-radius: 20px; background: linear-gradient(105deg, rgba(22, 21, 32, .98), rgba(12, 15, 27, .97)); box-shadow: inset 0 1px rgba(255,255,255,.025); transition: transform .25s, border-color .25s, box-shadow .25s; touch-action: pan-y; }
+      .ai-look:hover { transform: translateX(4px); border-color: rgba(123, 191, 255, .64); box-shadow: 0 0 24px rgba(51, 173, 255, .1); }
+      .ai-look.is-swiping { transition: none; }
+      .ai-look-image { height: 96px; border: 1px solid rgba(155, 100, 255, .38); border-radius: 15px; background-size: cover; background-position: 50% 13%; box-shadow: inset 0 0 18px rgba(0,0,0,.3); }
+      .ai-look-info { min-width: 0; }
+      .ai-look-name { display: block; color: #fff; font-size: 15px; line-height: 1.18; font-weight: 700; }
+      .ai-look-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; color: #8e8b9b; font-size: 10px; }
+      .ai-look-price { color: #fff; font-size: 20px; font-weight: 800; letter-spacing: -.04em; }
+      .ai-score { color: #21d7fc; border: 1px solid rgba(34, 207, 253, .4); border-radius: 10px; padding: 4px 7px; background: rgba(0, 125, 168, .14); font-size: 10px; font-weight: 800; }
+      .ai-look-reason { grid-column: 2 / 4; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(100, 91, 132, .27); color: #ab91ec; font-size: 10px; }
+      .ai-actions { display: grid; gap: 7px; }
+      .ai-actions button { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(151, 104, 255, .58); color: #c7a5ff; background: rgba(44, 23, 86, .32); font-size: 14px; transition: .2s; }
+      .ai-actions button:hover { color: #0a0612; background: #b68aff; box-shadow: 0 0 18px rgba(172, 113, 255, .5); }
+      .ai-results-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: auto; padding: 17px 4px 0; border-top: 1px solid rgba(102, 86, 152, .3); color: #7d7891; font-size: 10px; }
+      .ai-footer-nav { display: flex; gap: 21px; color: #7e7499; font-size: 10px; }
+      .ai-footer-nav b { color: #b291ff; }
+      .ai-undo { position: fixed; z-index: 50; left: 50%; bottom: 23px; display: flex; align-items: center; gap: 13px; padding: 13px 15px 13px 18px; border: 1px solid rgba(151, 106, 255, .5); border-radius: 999px; color: #eae5ff; background: rgba(15, 10, 30, .95); box-shadow: 0 12px 32px rgba(0,0,0,.35); font-size: 12px; transform: translate(-50%, 110px); transition: transform .3s ease; }
+      .ai-undo.show { transform: translate(-50%, 0); }
+      .ai-undo button { border: 0; border-radius: 999px; padding: 6px 10px; color: #160a28; background: #bd8dff; font-size: 10px; font-weight: 800; }
+
+      .styler { display: none; }
+
+      .styler { padding: 132px 0 115px; background: var(--cream); }
+      .section-shell { width: min(1184px, calc(100% - 56px)); margin: 0 auto; }
+      .section-heading { max-width: 660px; }
+      .section-heading h2 { margin: 12px 0; font: 500 clamp(35px, 4vw, 52px)/1.06 "Playfair Display", serif; letter-spacing: -.045em; }
+      .section-heading p { max-width: 540px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+      .styler-panel { display: grid; grid-template-columns: 400px 1fr; gap: 0; margin-top: 45px; min-height: 520px; overflow: hidden; border: 1px solid var(--border); border-radius: 22px; background: #fffdf9; box-shadow: 0 16px 44px rgba(63,30,38,.07); }
+      .quiz-side { padding: 31px; border-right: 1px solid var(--border); }
+      .quiz-step { color: var(--rose); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; }
+      .quiz-side h3 { margin: 9px 0 22px; font: 500 27px/1.15 "Playfair Display", serif; letter-spacing: -.03em; }
+      .option-label { display: block; margin: 23px 0 9px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
+      .event-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+      .event-option { text-align: left; position: relative; min-height: 73px; padding: 12px; border: 1px solid #e8ddd4; border-radius: 12px; background: #fff; color: var(--ink); transition: .2s; }
+      .event-option .event-symbol { display: block; font-size: 17px; margin-bottom: 5px; }
+      .event-option b { font-size: 12px; }
+      .event-option.is-selected { background: #fff2dc; border-color: #e0a457; box-shadow: inset 0 0 0 1px #e0a457; }
+      .event-option.is-selected::after { content: "✓"; display: grid; place-items: center; position: absolute; width: 17px; height: 17px; right: 7px; top: 7px; border-radius: 50%; background: #bd7540; color: #fff; font-size: 10px; }
+      .people-options, .budget-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+      .person-option, .budget-option { border: 1px solid #e8ddd4; color: #735e52; background: #fff; border-radius: 10px; padding: 9px 5px; font-size: 11px; font-weight: 600; }
+      .person-option.is-selected, .budget-option.is-selected { background: var(--plum); border-color: var(--plum); color: #fffaf5; }
+      .budget-options { grid-template-columns: repeat(2, 1fr); }
+      .build-button { width: 100%; margin-top: 25px; }
+      .saving-note { margin: 12px 0 0; text-align: center; color: #9a877a; font-size: 10px; }
+
+      .results-side { position: relative; padding: 30px; overflow: hidden; background: linear-gradient(135deg, #fcf4eb, #f7e8e2); }
+      .results-side::before { content: ""; width: 470px; height: 470px; position: absolute; border-radius: 50%; top: -250px; right: -150px; background: radial-gradient(circle, rgba(210,157,85,.18), transparent 70%); }
+      .results-top { position: relative; display: flex; justify-content: space-between; align-items: start; gap: 18px; }
+      .results-top h3 { margin: 5px 0 0; font: 500 28px/1.1 "Playfair Display", serif; letter-spacing: -.04em; }
+      .ai-badge { color: #8c4c24; background: rgba(255,250,242,.75); border: 1px solid #ecd3b2; border-radius: 99px; padding: 7px 10px; white-space: nowrap; font-size: 10px; font-weight: 700; }
+      .guidance { position: relative; margin: 22px 0 20px; padding: 13px 14px; background: rgba(255,255,255,.65); border: 1px solid rgba(226,201,183,.75); border-radius: 12px; color: #6e5445; font-size: 12px; line-height: 1.55; }
+      .guidance b { color: var(--plum); }
+      .product-grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(125px, 1fr)); gap: 12px; }
+      .product-card { min-width: 0; overflow: hidden; border: 1px solid rgba(234,218,205,.9); border-radius: 13px; background: #fffdfb; box-shadow: 0 6px 12px rgba(77,35,47,.04); transform-style: preserve-3d; transition: transform .25s ease, box-shadow .25s ease; }
+      .product-card:hover { transform: translateY(-9px) rotateX(4deg) rotateY(-3deg); box-shadow: 0 22px 30px rgba(77,35,47,.17); animation: product-bounce .55s cubic-bezier(.17,.67,.34,1.3); }
+      .product-image { height: 144px; position: relative; background-size: cover; background-position: center; }
+      .product-image::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(32,8,21,.16), transparent 45%); }
+      .store-badge { position: absolute; z-index: 1; left: 7px; bottom: 7px; padding: 4px 6px; border-radius: 6px; color: #3b2630; background: rgba(255,255,255,.91); font-size: 8px; font-weight: 700; }
+      .heart { position: absolute; z-index: 2; right: 7px; top: 7px; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 50%; color: #8c5b66; background: rgba(255,255,255,.88); font-size: 14px; }
+      .heart.is-saved { color: #b12555; background: #fff0f4; }
+      .product-info { padding: 9px 9px 10px; }
+      .product-name { display: block; min-height: 31px; overflow: hidden; font-size: 10px; font-weight: 600; line-height: 1.45; }
+      .product-bottom { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-top: 6px; }
+      .product-price { font-size: 11px; font-weight: 700; }
+      .shop-link { color: var(--rose); font-size: 9px; font-weight: 700; }
+      .result-footer { position: relative; margin-top: 22px; padding-top: 17px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(220,192,175,.7); }
+      .result-footer span { color: var(--muted); font-size: 11px; }
+      .view-all { border: 0; background: transparent; color: var(--rose); font-size: 11px; font-weight: 700; }
+
+      .events-section { padding: 116px 0; background: #f4ece2; }
+      .event-header { display: flex; justify-content: space-between; align-items: end; gap: 30px; }
+      .event-header .section-heading p { margin-bottom: 0; }
+      .event-slider-controls { display: flex; gap: 8px; }
+      .event-slider-controls button { width: 39px; height: 39px; border: 1px solid #d7c3b3; color: #6a4d42; background: transparent; border-radius: 50%; }
+      .event-slider-controls button:hover { background: #fffaf5; }
+      .event-showcase { display: grid; grid-template-columns: 1.12fr 1fr 1fr 1fr; gap: 15px; margin-top: 38px; }
+      .event-editorial { height: 390px; padding: 20px; position: relative; overflow: hidden; border-radius: 16px; color: #fff; background-size: cover; background-position: center; }
+      .event-editorial { transform-style: preserve-3d; transition: transform .25s ease, box-shadow .25s ease; }
+      .event-editorial:hover { transform: translateY(-9px) rotateX(3deg) rotateY(-2deg); box-shadow: 0 24px 36px rgba(48, 12, 34, .22); animation: product-bounce .55s cubic-bezier(.17,.67,.34,1.3); }
+      .event-editorial::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(30,7,16,.7), rgba(30,7,16,.04) 60%); }
+      .event-editorial:nth-child(2) { margin-top: 30px; height: 330px; }
+      .event-editorial:nth-child(3) { margin-top: 54px; height: 306px; }
+      .event-editorial:nth-child(4) { margin-top: 30px; height: 330px; }
+      .event-editorial > * { position: relative; }
+      .event-editorial .event-number { color: rgba(255,255,255,.7); font-size: 10px; letter-spacing: .14em; }
+      .event-editorial .event-name { position: absolute; left: 20px; bottom: 20px; font: 500 29px/1 "Playfair Display", serif; letter-spacing: -.04em; }
+      .event-editorial .event-name small { display: block; margin-top: 7px; color: rgba(255,255,255,.73); font: 11px "DM Sans", sans-serif; letter-spacing: 0; }
+
+      .how-it-works { padding: 118px 0; background: var(--cream); }
+      .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; margin-top: 48px; }
+      .step { position: relative; padding: 0 24px 0 0; }
+      .step:not(:last-child)::after { content: ""; position: absolute; top: 31px; right: -20px; width: 42px; border-top: 1px dashed #d0ae91; }
+      .step-number { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; color: #91522e; background: #fae6c5; font: 500 23px "Playfair Display", serif; }
+      .step h3 { margin: 20px 0 8px; font: 500 25px "Playfair Display", serif; letter-spacing: -.035em; }
+      .step p { max-width: 270px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+      .cta-band { width: min(1184px, calc(100% - 56px)); min-height: 330px; margin: 0 auto 84px; padding: 57px 70px; display: flex; position: relative; overflow: hidden; align-items: center; justify-content: space-between; border-radius: 22px; color: #fffaf5; background: linear-gradient(108deg, #2c0c22, #722c4d); }
+      .cta-band::after { content: "✦"; position: absolute; right: 7%; top: -72px; color: rgba(229,182,111,.24); font: 320px "Playfair Display", serif; }
+      .cta-band h2 { position: relative; z-index: 1; max-width: 510px; margin: 11px 0 0; font: 500 clamp(32px, 3.6vw, 48px)/1.06 "Playfair Display", serif; letter-spacing: -.05em; }
+      .cta-band .button { position: relative; z-index: 1; white-space: nowrap; }
+
+      @keyframes product-bounce { 0%, 100% { translate: 0 0; } 42% { translate: 0 -5px; } 72% { translate: 0 2px; } }
+
+      footer { padding: 0 28px 34px; color: #846f63; font-size: 11px; }
+      .footer-inner { width: min(1184px, 100%); margin: auto; display: flex; justify-content: space-between; gap: 18px; padding-top: 24px; border-top: 1px solid var(--border); }
+      .footer-inner .brand { color: var(--plum); font-size: 17px; }
+      .footer-inner .brand-mark { color: var(--terracotta); border-color: var(--border); }
+
+      .toast { position: fixed; z-index: 40; left: 50%; bottom: 24px; transform: translate(-50%, 90px); padding: 12px 18px; border-radius: 999px; color: #fff; background: var(--plum); box-shadow: 0 10px 24px rgba(35,16,30,.22); font-size: 12px; transition: transform .3s ease; }
+      .toast.show { transform: translate(-50%, 0); }
+
+      @media (max-width: 920px) {
+        .nav a:not(.nav-action) { display: none; }
+        .hero-inner { grid-template-columns: 1fr; gap: 24px; padding-top: 142px; }
+        .hero { min-height: 975px; }
+        .look-preview { width: min(500px, 100%); height: 470px; margin: 0 auto; }
+        .hero-image-frame { width: 350px; height: 445px; right: 52px; }
+        .gold-ring { width: 385px; height: 385px; right: -12px; top: 18px; }
+        .trust { grid-template-columns: 1.4fr repeat(3, 1fr); }
+        .styler-panel { grid-template-columns: 340px 1fr; }
+        .product-grid { grid-template-columns: repeat(3, minmax(110px, 1fr)); }
+        .product-card:nth-child(n+7) { display: none; }
+        .ai-studio-shell { grid-template-columns: 1fr; max-width: 620px; }
+        .ai-chat { min-height: 470px; border-right: 0; border-bottom: 1px solid rgba(141, 102, 249, .24); }
+        .ai-results { min-height: 620px; }
+      }
+      @media (max-width: 680px) {
+        .site-header { padding: 18px 20px; }
+        .brand { font-size: 19px; }
+        .nav { gap: 0; }
+        .nav .nav-action { padding: 9px 12px; font-size: 11px; }
+        .hero { min-height: 910px; }
+        .hero-inner, .section-shell { width: min(100% - 36px, 560px); }
+        .hero-inner { padding: 128px 0 40px; }
+        h1 { font-size: 49px; }
+        .hero-copy { font-size: 14px; }
+        .hero-actions { display: grid; grid-template-columns: 1fr 1fr; }
+        .button { min-height: 49px; padding: 0 14px; font-size: 12px; }
+        .hero-proof { margin-top: 25px; }
+        .look-preview { height: 395px; margin-top: 3px; }
+        .hero-image-frame { width: 258px; height: 372px; right: 0; }
+        .photo-main, .photo-sheen { border-radius: 128px 128px 12px 12px; }
+        .gold-ring { width: 300px; height: 300px; right: -45px; top: 19px; }
+        .floating-card.top { top: 53px; left: 0; }
+        .floating-card.bottom { left: 5px; bottom: 0; }
+        .floating-card { width: 208px; padding: 11px; }
+        .scroll-hint { display: none; }
+        .trust { width: calc(100% - 36px); margin-top: -24px; grid-template-columns: 1fr 1fr; }
+        .trust-intro { grid-column: span 2; border-right: 0; border-bottom: 1px solid var(--border); }
+        .trust-stat { padding: 15px 16px; }
+        .trust-stat:last-child { display: none; }
+        .trust-stat strong { font-size: 21px; }
+        .styler, .events-section, .how-it-works { padding: 82px 0; }
+        .section-heading h2 { font-size: 38px; }
+        .styler-panel { display: block; margin-top: 32px; }
+        .quiz-side { border-right: 0; border-bottom: 1px solid var(--border); padding: 23px 18px; }
+        .quiz-side h3 { font-size: 24px; }
+        .option-label { margin-top: 17px; }
+        .event-option { min-height: 63px; }
+        .results-side { padding: 23px 14px; }
+        .results-top h3 { font-size: 25px; }
+        .ai-badge { font-size: 9px; padding: 6px 8px; }
+        .guidance { margin: 18px 0 15px; font-size: 11px; }
+        .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .product-card:nth-child(n+7) { display: block; }
+        .product-image { height: 153px; }
+        .event-header { display: block; }
+        .event-slider-controls { margin-top: 20px; }
+        .event-showcase { grid-template-columns: 1fr 1fr; gap: 11px; margin-top: 26px; }
+        .event-editorial, .event-editorial:nth-child(2), .event-editorial:nth-child(3), .event-editorial:nth-child(4) { height: 260px; margin-top: 0; }
+        .event-editorial .event-name { font-size: 24px; left: 14px; bottom: 15px; }
+        .event-editorial { padding: 14px; }
+        .steps { grid-template-columns: 1fr; gap: 29px; margin-top: 33px; }
+        .step:not(:last-child)::after { left: 28px; top: 68px; width: 1px; height: 28px; border-left: 1px dashed #d0ae91; border-top: 0; }
+        .step h3 { margin-top: 15px; font-size: 23px; }
+        .cta-band { width: calc(100% - 36px); margin-bottom: 54px; min-height: 300px; padding: 38px 25px; display: block; }
+        .cta-band .button { margin-top: 28px; }
+        .footer-inner { display: block; }
+        .footer-inner p { margin: 15px 0 0; }
+        .ai-studio { padding: 70px 0; }
+        .ai-studio-shell { width: calc(100% - 32px); border-radius: 22px; }
+        .ai-chat, .ai-results { padding: 22px 17px; }
+        .ai-chat { min-height: 440px; }
+        .ai-messages { padding: 24px 0 16px; }
+        .message { max-width: 95%; font-size: 14px; }
+        .ai-event-tabs { grid-template-columns: repeat(2, 1fr); }
+        .ai-results-top h2 { font-size: 27px; }
+        .ai-look { min-height: 110px; grid-template-columns: 72px 1fr auto; column-gap: 10px; padding: 10px; }
+        .ai-look-image { height: 72px; border-radius: 12px; }
+        .ai-look-name { font-size: 13px; }
+        .ai-look-price { font-size: 17px; }
+        .ai-look-reason { font-size: 9px; }
+        .ai-look-feed { max-height: 420px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top"><span class="brand-mark">✦</span>Vow &amp; Vogue</a>
+      <nav class="nav">
+        <a href="#styler">Your stylist</a>
+        <a href="#events">Wedding edits</a>
+        <a href="#how-it-works">How it works</a>
+        <a class="nav-action" href="#styler">Find my look</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-inner">
+          <div>
+            <span class="eyebrow">Your personal wedding stylist</span>
+            <h1>Looks that make every <em>wedding moment yours.</em></h1>
+            <p class="hero-copy">Tell us the celebration, who you’re dressing, and the mood you love. Our AI stylist curates shoppable Indian wedding looks in seconds.</p>
+            <div class="hero-actions">
+              <a class="button primary" href="#styler">Start styling <span>→</span></a>
+              <a class="button ghost" href="#events">Explore wedding edits</a>
+            </div>
+            <div class="hero-proof">
+              <div class="avatars" aria-hidden="true">
+                <span style="background-image:url('https://images.unsplash.com/photo-1583391733981-849840bf9376?auto=format&fit=crop&w=80&q=80')"></span>
+                <span style="background-image:url('https://images.unsplash.com/photo-1621086893822-ca4f0a98b2f1?auto=format&fit=crop&w=80&q=80')"></span>
+                <span style="background-image:url('https://images.unsplash.com/photo-1610652492500-ded49ceeb378?auto=format&fit=crop&w=80&q=80')"></span>
+              </div>
+              <span>Made for every kind of wedding guest</span>
+            </div>
+          </div>
+          <div class="look-preview" id="heroPreview" aria-label="A rotating preview of AI styled wedding looks">
+            <div class="gold-ring"></div>
+            <div class="hero-image-frame" id="heroImageFrame">
+              <img class="photo-main" id="heroImage" src="assets/hero-3d-editorial.png" alt="Women's plum and gold wedding look" loading="eager" />
+              <span class="photo-sheen" aria-hidden="true"></span>
+            </div>
+            <div class="floating-card top">
+              <span class="card-icon">✦</span>
+              <div><small id="heroSlideLabel">WOMEN'S WEDDING EDIT</small><strong id="heroBlueprint">Plum lehenga &amp; gold zari</strong></div>
+            </div>
+            <div class="floating-card bottom">
+              <span class="card-icon" id="heroMatchIcon">♡</span>
+              <div><small>AI STYLE MATCH</small><strong id="heroMatch">Made for a bridal moment</strong><div class="match-line"><span></span></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="scroll-hint"><i></i> Scroll to style</div>
+      </section>
+
+      <section class="trust" aria-label="Vow and Vogue benefits">
+        <div class="trust-intro"><span>A little wedding magic</span><b>The fun part of getting ready.</b></div>
+        <div class="trust-stat"><strong>4 events</strong><span>From haldi to the big day</span></div>
+        <div class="trust-stat"><strong>3 people</strong><span>Women, men &amp; little ones</span></div>
+        <div class="trust-stat"><strong>4 stores</strong><span>One beautiful edit</span></div>
+      </section>
+
+      <section class="ai-studio" id="styler" aria-label="WeddingStyle AI stylist studio">
+        <div class="ai-studio-shell">
+          <aside class="ai-chat">
+            <div class="ai-chat-header">
+              <span class="ai-orb" aria-hidden="true"></span>
+              <div class="ai-chat-brand"><small>WeddingStyle AI</small><strong>● Listening</strong></div>
+              <span class="ai-listening">Live</span>
+            </div>
+            <div class="ai-messages" id="aiMessages">
+              <div class="message">Hi! I’m your AI stylist ✨ Tell me about your wedding event and I’ll build your looks instantly.</div>
+              <div class="message user">I need a Haldi outfit, budget around ₹5k, and I like pastels.</div>
+              <div class="message" id="aiReply">Got it — Haldi, ₹5,000, with a pastel glow. I’m checking styles that fit your celebration.</div>
+              <div class="ai-chips" aria-label="Quick style preferences">
+                <button class="ai-chip is-selected" data-prompt="pastels">🌸 Pastels</button>
+                <button class="ai-chip" data-prompt="yellow">💛 Yellow</button>
+                <button class="ai-chip" data-prompt="pink">💗 Hot Pink</button>
+                <button class="ai-chip" data-prompt="green">💚 Emerald</button>
+              </div>
+            </div>
+            <form class="ai-composer" id="aiComposer">
+              <input id="aiPrompt" aria-label="Tell the AI stylist what you need" placeholder="Type or speak your answer…" autocomplete="off" />
+              <button type="submit" aria-label="Send style request">✦</button>
+            </form>
+          </aside>
+
+          <article class="ai-results" aria-live="polite">
+            <div class="ai-results-top">
+              <div><span class="ai-result-kicker">AI style match</span><h2 id="aiCollectionTitle">Haldi Collection</h2></div>
+              <div class="match-orbit"><span id="aiMatchPercent">94%</span></div>
+            </div>
+            <div class="ai-event-tabs" id="aiEventTabs">
+              <button class="ai-event-tab is-active" data-ai-event="haldi">Haldi</button>
+              <button class="ai-event-tab" data-ai-event="mehndi">Mehndi</button>
+              <button class="ai-event-tab" data-ai-event="wedding">Wedding</button>
+              <button class="ai-event-tab" data-ai-event="prewedding">Pre-wedding</button>
+            </div>
+            <div class="ai-thinking"><span class="thinking-dots"><i></i><i></i><i></i></span><span id="aiThinking">Found 12 yellow outfit ideas · filtering by your budget…</span></div>
+            <div class="ai-look-feed" id="aiLookFeed"></div>
+            <div class="ai-results-footer"><span>Swipe right to save · left to skip</span><div class="ai-footer-nav"><b>✦ Style</b><span>♡ Saved</span><span>◉ Profile</span></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="styler" id="legacy-styler" aria-hidden="true">
+        <div class="section-shell">
+          <div class="section-heading">
+            <span class="eyebrow">Meet your personal edit</span>
+            <h2>A few details. A very good outfit.</h2>
+            <p>Pick the moment you’re dressing for and we’ll make a curated fashion prediction—with options at every budget.</p>
+          </div>
+          <div class="styler-panel">
+            <aside class="quiz-side">
+              <span class="quiz-step">Style finder · 01</span>
+              <h3>What are we celebrating?</h3>
+              <div class="event-options" id="eventOptions">
+                <button class="event-option is-selected" data-event="haldi"><span class="event-symbol">🌼</span><b>Haldi</b></button>
+                <button class="event-option" data-event="mehndi"><span class="event-symbol">🌿</span><b>Mehndi</b></button>
+                <button class="event-option" data-event="wedding"><span class="event-symbol">♥</span><b>Wedding day</b></button>
+                <button class="event-option" data-event="prewedding"><span class="event-symbol">◌</span><b>Pre-wedding</b></button>
+              </div>
+              <span class="option-label">Who needs a look?</span>
+              <div class="people-options" id="peopleOptions">
+                <button class="person-option is-selected" data-person="women">Women</button>
+                <button class="person-option" data-person="men">Men</button>
+                <button class="person-option" data-person="kids">Kids</button>
+              </div>
+              <span class="option-label">Comfortable spend</span>
+              <div class="budget-options" id="budgetOptions">
+                <button class="budget-option" data-budget="value">Under ₹3k</button>
+                <button class="budget-option is-selected" data-budget="mid">₹3k–₹8k</button>
+                <button class="budget-option" data-budget="premium">₹8k–₹15k</button>
+                <button class="budget-option" data-budget="luxury">₹15k+</button>
+              </div>
+              <button class="button primary build-button" id="buildLook">Create my edit <span>→</span></button>
+              <p class="saving-note">No account needed · takes under a minute</p>
+            </aside>
+            <section class="results-side" aria-live="polite">
+              <div class="results-top">
+                <div><span class="eyebrow" id="editEyebrow">Your haldi edit</span><h3 id="editTitle">Sunlit, soft &amp; celebratory.</h3></div>
+                <span class="ai-badge">✦ AI styled for you</span>
+              </div>
+              <p class="guidance" id="guidance"><b>The mood:</b> Marigold yellow with tiny gold details. Keep it light, luminous and easy to move in for those all-important candid moments.</p>
+              <div class="product-grid" id="productGrid"></div>
+              <div class="result-footer"><span id="resultCount">8 handpicked pieces from your favourite stores</span><button class="view-all" id="viewAll">Show all 8 →</button></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="events-section" id="events">
+        <div class="section-shell">
+          <div class="event-header">
+            <div class="section-heading"><span class="eyebrow">The wedding calendar</span><h2>Dress beautifully for every chapter.</h2><p>Each event has its own energy. We help you arrive in exactly the right one.</p></div>
+            <div class="event-slider-controls"><button type="button" aria-label="Previous edit">←</button><button type="button" aria-label="Next edit">→</button></div>
+          </div>
+          <div class="event-showcase">
+            <a href="#styler" class="event-editorial" data-select-event="haldi" style="background-image:linear-gradient(rgba(153,100,12,.3), rgba(49,12,25,.68)),url('assets/hero-3d-editorial.png');background-position:center"><span class="event-number">01 — THE DAYLIGHT PARTY</span><span class="event-name">Haldi<small>Joy in every shade of yellow</small></span></a>
+            <a href="#styler" class="event-editorial" data-select-event="mehndi" style="background-image:linear-gradient(rgba(22,102,65,.25), rgba(49,12,25,.7)),url('assets/hero-3d-editorial.png');background-position:54% center"><span class="event-number">02 — HENNA HOURS</span><span class="event-name">Mehndi<small>Rich greens &amp; playful sparkle</small></span></a>
+            <a href="#styler" class="event-editorial" data-select-event="wedding" style="background-image:linear-gradient(rgba(121,23,44,.24), rgba(49,12,25,.7)),url('assets/hero-3d-editorial.png');background-position:49% center"><span class="event-number">03 — THE BIG YES</span><span class="event-name">Wedding<small>Made for a grand entrance</small></span></a>
+            <a href="#styler" class="event-editorial" data-select-event="prewedding" style="background-image:linear-gradient(rgba(136,78,114,.22), rgba(49,12,25,.68)),url('assets/hero-3d-editorial.png');background-position:46% center"><span class="event-number">04 — BEFORE THE VOWS</span><span class="event-name">Pre-wedding<small>Picture-perfect, naturally</small></span></a>
+          </div>
+        </div>
+      </section>
+
+      <section class="how-it-works" id="how-it-works">
+        <div class="section-shell">
+          <div class="section-heading"><span class="eyebrow">The easy way to get ready</span><h2>Good style should feel like a gift.</h2></div>
+          <div class="steps">
+            <article class="step"><div class="step-number">01</div><h3>Choose the moment</h3><p>From a fragrant haldi morning to a grand wedding night, start with your celebration.</p></article>
+            <article class="step"><div class="step-number">02</div><h3>Make it yours</h3><p>Tell us who you’re shopping for and what you want to spend. The rest is the fun part.</p></article>
+            <article class="step"><div class="step-number">03</div><h3>Shop the edit</h3><p>See 5–10 handpicked options from Amazon, Myntra, AJIO and Flipkart—all in one place.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-band">
+        <div><span class="eyebrow">It’s your moment</span><h2>Let’s find the look they’ll remember.</h2></div>
+        <a href="#styler" class="button primary">Build my wedding edit <span>→</span></a>
+      </section>
+    </main>
+
+    <footer><div class="footer-inner"><a class="brand" href="#top"><span class="brand-mark">✦</span>Vow &amp; Vogue</a><p>AI-inspired shopping recommendations. Product availability and final prices are confirmed by the retailer.</p><p>Made for the beautiful chaos of weddings.</p></div></footer>
+    <div class="toast" id="toast" role="status"></div>
+    <div class="ai-undo" id="aiUndo" role="status"><span id="aiUndoMessage"></span><button type="button" id="aiUndoButton">Undo</button></div>
+
+    <script>
+      const editData = {
+        haldi: {
+          label: 'Your haldi edit', title: 'Sunlit, soft & celebratory.',
+          mood: 'Marigold yellow with tiny gold details. Keep it light, luminous and easy to move in for those all-important candid moments.',
+          women: [
+            ['Yellow georgette embroidered kurta set', '₹2,499', 'Myntra', 'yellow kurta set women', 'photo-1583391733956-3750e0ff6b0c'],
+            ['Mirror-work flared sharara', '₹3,199', 'AJIO', 'yellow sharara set women', 'photo-1610189020382-668a36d6d7a8'],
+            ['Drape-ready mustard saree', '₹2,795', 'Amazon', 'yellow saree women wedding', 'photo-1610030469668-8e8b1ae9a7e9'],
+            ['Gold jhumka earrings', '₹699', 'Flipkart', 'gold jhumka earrings', 'photo-1617038220319-276d3cfab638'],
+            ['Embroidered potli bag', '₹899', 'Myntra', 'yellow potli bag', 'photo-1594223274512-ad4803739b7c'],
+            ['Champagne block heels', '₹1,299', 'AJIO', 'gold block heel sandals', 'photo-1543163521-1bf539c55dd2'],
+            ['Pearl & gold hair pins', '₹449', 'Amazon', 'pearl hair accessories', 'photo-1617038220319-276d3cfab638'],
+            ['Gota patti dupatta', '₹1,099', 'Flipkart', 'yellow gota patti dupatta', 'photo-1594633312681-425c7b97ccd1']
+          ],
+          men: [
+            ['Mustard linen kurta set', '₹2,199', 'Myntra', 'mustard kurta men', 'photo-1617137968427-85924c800a22'],
+            ['Ivory chikankari kurta', '₹1,899', 'Amazon', 'ivory kurta men', 'photo-1609261509940-0c8c62d8e46e'],
+            ['Yellow Nehru jacket', '₹1,499', 'Flipkart', 'yellow nehru jacket men', 'photo-1610652492500-ded49ceeb378'],
+            ['Tan leather mojari', '₹1,099', 'Myntra', 'tan mojari men', 'photo-1542291026-7eec264c27ff'],
+            ['Gold dial watch', '₹1,299', 'Amazon', 'gold dial watch men', 'photo-1524805444758-089113d48a6d'],
+            ['Printed pocket square', '₹299', 'AJIO', 'yellow pocket square men', 'photo-1589756823695-278bc923f962'],
+            ['Ivory cotton stole', '₹749', 'Flipkart', 'ivory stole men', 'photo-1610652492500-ded49ceeb378'],
+            ['Classic kolhapuri sandals', '₹999', 'Amazon', 'kolhapuri sandals men', 'photo-1542291026-7eec264c27ff']
+          ],
+          kids: [
+            ['Sunshine embroidered lehenga', '₹1,799', 'Myntra', 'yellow lehenga kids', 'photo-1519457431-44ccd64a579b'],
+            ['Yellow printed kurta set', '₹1,299', 'Flipkart', 'yellow kurta kids', 'photo-1503454537195-1dcabb73ffb9'],
+            ['Floral hairband', '₹349', 'Amazon', 'floral hairband kids', 'photo-1471286174890-9c112ffca5b4'],
+            ['Tiny jutti flats', '₹699', 'Myntra', 'kids jutti shoes', 'photo-1515347619252-60a4bf4fff4f'],
+            ['Cotton bandhgala jacket', '₹1,099', 'AJIO', 'kids bandhgala jacket', 'photo-1503454537195-1dcabb73ffb9'],
+            ['Mini sling bag', '₹599', 'Flipkart', 'kids sling bag', 'photo-1594223274512-ad4803739b7c']
+          ]
+        },
+        mehndi: {
+          label: 'Your mehndi edit', title: 'Garden-party green, with a glint.',
+          mood: 'An emerald and pistachio palette lets the mehndi shine. Add mirror-work, a fresh floral accent and a little ease for an afternoon of dancing.',
+          women: [
+            ['Emerald mirror-work lehenga', '₹4,599', 'Myntra', 'green mirror work lehenga', 'photo-1596541223130-5d31a73fb6c6'], ['Pistachio drape saree', '₹3,499', 'AJIO', 'green drape saree', 'photo-1610030469668-8e8b1ae9a7e9'], ['Floral cape kurta set', '₹2,899', 'Amazon', 'green cape kurta set women', 'photo-1583391733956-3750e0ff6b0c'], ['Green stone chandbalis', '₹899', 'Flipkart', 'green stone earrings', 'photo-1617038220319-276d3cfab638'], ['Beaded floral potli', '₹1,099', 'Myntra', 'beaded potli bag', 'photo-1594223274512-ad4803739b7c'], ['Gold strappy sandals', '₹1,299', 'AJIO', 'gold strappy sandals', 'photo-1543163521-1bf539c55dd2'], ['Fresh flower gajra', '₹349', 'Amazon', 'flower gajra hair accessory', 'photo-1471286174890-9c112ffca5b4'], ['Mint organza dupatta', '₹899', 'Flipkart', 'mint organza dupatta', 'photo-1594633312681-425c7b97ccd1']],
+          men: [
+            ['Sage silk kurta set', '₹2,499', 'Myntra', 'sage kurta set men', 'photo-1617137968427-85924c800a22'], ['Bottle green bandhgala', '₹3,999', 'AJIO', 'green bandhgala men', 'photo-1610652492500-ded49ceeb378'], ['Ivory tapered trousers', '₹1,499', 'Amazon', 'ivory trousers men', 'photo-1609261509940-0c8c62d8e46e'], ['Emerald brooch pin', '₹499', 'Flipkart', 'green brooch men', 'photo-1524805444758-089113d48a6d'], ['Brown leather mojari', '₹1,199', 'Myntra', 'brown mojari men', 'photo-1542291026-7eec264c27ff'], ['Printed green stole', '₹799', 'Amazon', 'green stole men', 'photo-1610652492500-ded49ceeb378'], ['Classic silver watch', '₹1,699', 'Flipkart', 'silver watch men', 'photo-1524805444758-089113d48a6d'], ['Leaf-print pocket square', '₹299', 'AJIO', 'green pocket square men', 'photo-1589756823695-278bc923f962']],
+          kids: [
+            ['Mint embroidered lehenga', '₹1,999', 'Myntra', 'mint lehenga kids', 'photo-1519457431-44ccd64a579b'], ['Leaf print kurta set', '₹1,399', 'Flipkart', 'green kurta kids', 'photo-1503454537195-1dcabb73ffb9'], ['Floral clip set', '₹299', 'Amazon', 'floral clips kids', 'photo-1471286174890-9c112ffca5b4'], ['Mini green jutti', '₹699', 'Myntra', 'green jutti kids', 'photo-1515347619252-60a4bf4fff4f'], ['Little waistcoat set', '₹1,499', 'AJIO', 'kids waistcoat set', 'photo-1503454537195-1dcabb73ffb9'], ['Tiny embroidered bag', '₹599', 'Flipkart', 'kids embroidered sling bag', 'photo-1594223274512-ad4803739b7c']]
+        },
+        wedding: {
+          label: 'Your wedding-day edit', title: 'Grand, graceful & unforgettable.',
+          mood: 'Lean into classic red, rich wine and warm gold. An heirloom-inspired silhouette with polished finishing pieces gives the big day its rightful drama.',
+          women: [
+            ['Crimson bridal lehenga', '₹7,999', 'Myntra', 'red bridal lehenga women', 'photo-1583391733981-849840bf9376'], ['Wine embroidered saree', '₹5,499', 'AJIO', 'wine embroidered saree', 'photo-1610030469668-8e8b1ae9a7e9'], ['Gold temple jewellery set', '₹2,499', 'Amazon', 'gold temple jewellery set', 'photo-1617038220319-276d3cfab638'], ['Red velvet potli bag', '₹1,299', 'Flipkart', 'red velvet potli bag', 'photo-1594223274512-ad4803739b7c'], ['Zari silk dupatta', '₹1,899', 'Myntra', 'red zari dupatta', 'photo-1594633312681-425c7b97ccd1'], ['Metallic platform heels', '₹1,899', 'AJIO', 'gold platform heels', 'photo-1543163521-1bf539c55dd2'], ['Kundan maang tikka', '₹749', 'Amazon', 'kundan maang tikka', 'photo-1617038220319-276d3cfab638'], ['Red bangle stack', '₹599', 'Flipkart', 'red bridal bangles', 'photo-1617038220319-276d3cfab638']],
+          men: [
+            ['Ivory embroidered sherwani', '₹7,499', 'Myntra', 'ivory sherwani men', 'photo-1617137968427-85924c800a22'], ['Maroon velvet bandh gala', '₹5,999', 'AJIO', 'maroon bandh gala men', 'photo-1610652492500-ded49ceeb378'], ['Gold jacquard stole', '₹1,699', 'Amazon', 'gold stole men', 'photo-1610652492500-ded49ceeb378'], ['Embroidered mojari', '₹1,499', 'Flipkart', 'embroidered mojari men', 'photo-1542291026-7eec264c27ff'], ['Pearl safa brooch', '₹899', 'Myntra', 'safa brooch men', 'photo-1524805444758-089113d48a6d'], ['Wine pocket square', '₹399', 'AJIO', 'wine pocket square men', 'photo-1589756823695-278bc923f962'], ['Gold-tone watch', '₹1,999', 'Amazon', 'gold watch men', 'photo-1524805444758-089113d48a6d'], ['Ivory churidar trousers', '₹1,199', 'Flipkart', 'ivory churidar men', 'photo-1609261509940-0c8c62d8e46e']],
+          kids: [
+            ['Red embroidered lehenga', '₹2,299', 'Myntra', 'red lehenga kids', 'photo-1519457431-44ccd64a579b'], ['Ivory mini sherwani', '₹2,499', 'Flipkart', 'sherwani kids', 'photo-1503454537195-1dcabb73ffb9'], ['Pearl hair accessory', '₹349', 'Amazon', 'pearl hair accessory kids', 'photo-1471286174890-9c112ffca5b4'], ['Gold jutti flats', '₹799', 'Myntra', 'gold jutti kids', 'photo-1515347619252-60a4bf4fff4f'], ['Tiny velvet bandhgala', '₹1,899', 'AJIO', 'kids velvet bandhgala', 'photo-1503454537195-1dcabb73ffb9'], ['Little red potli', '₹499', 'Flipkart', 'kids red potli bag', 'photo-1594223274512-ad4803739b7c']]
+        },
+        prewedding: {
+          label: 'Your pre-wedding edit', title: 'Photogenic, effortless, entirely you.',
+          mood: 'Soft neutrals and a strong silhouette let the two of you take centre stage. Think texture, movement and pieces that look wonderful from every angle.',
+          women: [
+            ['Blush flowy anarkali', '₹3,699', 'Myntra', 'blush anarkali women', 'photo-1594736797933-d0501ba2fe65'], ['Powder blue ruffle saree', '₹3,999', 'AJIO', 'blue ruffle saree', 'photo-1610030469668-8e8b1ae9a7e9'], ['Champagne co-ord set', '₹2,899', 'Amazon', 'champagne co ord set women', 'photo-1583391733956-3750e0ff6b0c'], ['Pearl drop earrings', '₹699', 'Flipkart', 'pearl drop earrings', 'photo-1617038220319-276d3cfab638'], ['Nude mini bag', '₹1,199', 'Myntra', 'nude mini bag women', 'photo-1594223274512-ad4803739b7c'], ['Rose gold sandals', '₹1,599', 'AJIO', 'rose gold sandals', 'photo-1543163521-1bf539c55dd2'], ['Sheer organza stole', '₹899', 'Amazon', 'organza stole women', 'photo-1594633312681-425c7b97ccd1'], ['Minimal bracelet set', '₹799', 'Flipkart', 'minimal bracelet women', 'photo-1617038220319-276d3cfab638']],
+          men: [
+            ['Beige linen kurta set', '₹2,899', 'Myntra', 'beige linen kurta men', 'photo-1617137968427-85924c800a22'], ['Powder blue shirt', '₹1,799', 'Amazon', 'powder blue shirt men', 'photo-1609261509940-0c8c62d8e46e'], ['Cream Nehru jacket', '₹1,699', 'Flipkart', 'cream nehru jacket men', 'photo-1610652492500-ded49ceeb378'], ['Brown suede loafers', '₹2,299', 'Myntra', 'brown loafers men', 'photo-1542291026-7eec264c27ff'], ['Classic steel watch', '₹1,899', 'AJIO', 'steel watch men', 'photo-1524805444758-089113d48a6d'], ['Soft printed stole', '₹699', 'Amazon', 'printed stole men', 'photo-1610652492500-ded49ceeb378'], ['Leather bracelet', '₹499', 'Flipkart', 'leather bracelet men', 'photo-1524805444758-089113d48a6d'], ['Neutral pocket square', '₹299', 'Myntra', 'neutral pocket square men', 'photo-1589756823695-278bc923f962']],
+          kids: [
+            ['Blush party frock', '₹1,599', 'Myntra', 'blush party frock kids', 'photo-1519457431-44ccd64a579b'], ['Blue waistcoat set', '₹1,699', 'Flipkart', 'blue waistcoat kids', 'photo-1503454537195-1dcabb73ffb9'], ['Bow hair clip set', '₹249', 'Amazon', 'bow hair clips kids', 'photo-1471286174890-9c112ffca5b4'], ['Soft loafers', '₹899', 'Myntra', 'kids party loafers', 'photo-1515347619252-60a4bf4fff4f'], ['Cream cotton jacket', '₹1,399', 'AJIO', 'kids cream jacket', 'photo-1503454537195-1dcabb73ffb9'], ['Tiny photo prop bag', '₹499', 'Flipkart', 'kids mini bag', 'photo-1594223274512-ad4803739b7c']]
+        }
+      };
+
+      const storeUrls = {
+        'Myntra': q => `https://www.myntra.com/${encodeURIComponent(q)}`,
+        'AJIO': q => `https://www.ajio.com/search/?text=${encodeURIComponent(q)}`,
+        'Amazon': q => `https://www.amazon.in/s?k=${encodeURIComponent(q)}`,
+        'Flipkart': q => `https://www.flipkart.com/search?q=${encodeURIComponent(q)}`
+      };
+      const state = { event: 'haldi', person: 'women', budget: 'mid', limit: 8 };
+      const projectCardVisuals = {
+        women: [
+          { image: 'assets/hero-3d-editorial.png', position: '50% 13%' },
+          { image: 'assets/hero-3d-editorial.png', position: '50% 29%' },
+          { image: 'assets/hero-3d-editorial.png', position: '50% 43%' },
+          { image: 'assets/hero-3d-editorial.png', position: '50% 58%' }
+        ],
+        men: [
+          { image: 'assets/hero-3d-man.png', position: '50% 12%' },
+          { image: 'assets/hero-3d-man.png', position: '50% 29%' },
+          { image: 'assets/hero-3d-man.png', position: '50% 45%' },
+          { image: 'assets/hero-3d-man.png', position: '50% 60%' }
+        ],
+        kids: [
+          { image: 'assets/hero-3d-child.png', position: '50% 14%' },
+          { image: 'assets/hero-3d-boy.png', position: '50% 13%' },
+          { image: 'assets/hero-3d-child.png', position: '50% 39%' },
+          { image: 'assets/hero-3d-boy.png', position: '50% 43%' }
+        ]
+      };
+      const projectCardVisual = (person, index) => projectCardVisuals[person][index % projectCardVisuals[person].length];
+      const productGrid = document.getElementById('productGrid');
+      const toast = document.getElementById('toast');
+
+      function renderProducts() {
+        const data = editData[state.event];
+        const products = data[state.person].slice(0, state.limit);
+        document.getElementById('editEyebrow').textContent = data.label;
+        document.getElementById('editTitle').textContent = data.title;
+        document.getElementById('guidance').innerHTML = `<b>The mood:</b> ${data.mood}`;
+        document.getElementById('resultCount').textContent = `${data[state.person].length} handpicked pieces from your favourite stores`;
+        document.getElementById('viewAll').textContent = state.limit < data[state.person].length ? `Show all ${data[state.person].length} →` : 'Curate a new edit →';
+        productGrid.innerHTML = products.map(([name, price, store, query], index) => {
+          const visual = projectCardVisual(state.person, index);
+          return `
+          <article class="product-card">
+            <div class="product-image" style="background-image:url('${visual.image}');background-position:${visual.position}">
+              <button class="heart" aria-label="Save ${name}" data-name="${name.replace(/"/g, '&quot;')}">♡</button>
+              <span class="store-badge">${store}</span>
+            </div>
+            <div class="product-info"><span class="product-name">${name}</span><div class="product-bottom"><strong class="product-price">${price}</strong><a class="shop-link" target="_blank" rel="noopener" href="${storeUrls[store](query)}">Shop ↗</a></div></div>
+          </article>`;
+        }).join('');
+      }
+      function selectButton(group, value, selector, key) {
+        document.querySelectorAll(`${group} ${selector}`).forEach(button => button.classList.toggle('is-selected', button.dataset[key] === value));
+      }
+      function notify(message) {
+        toast.textContent = message; toast.classList.add('show'); clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+      }
+      document.getElementById('eventOptions').addEventListener('click', event => {
+        const button = event.target.closest('[data-event]'); if (!button) return;
+        state.event = button.dataset.event; state.limit = 8; selectButton('#eventOptions', state.event, '[data-event]', 'event'); renderProducts();
+      });
+      document.getElementById('peopleOptions').addEventListener('click', event => {
+        const button = event.target.closest('[data-person]'); if (!button) return;
+        state.person = button.dataset.person; state.limit = 8; selectButton('#peopleOptions', state.person, '[data-person]', 'person'); renderProducts();
+      });
+      document.getElementById('budgetOptions').addEventListener('click', event => {
+        const button = event.target.closest('[data-budget]'); if (!button) return;
+        state.budget = button.dataset.budget; selectButton('#budgetOptions', state.budget, '[data-budget]', 'budget');
+      });
+      document.getElementById('buildLook').addEventListener('click', () => {
+        const button = document.getElementById('buildLook');
+        button.innerHTML = 'Styling your edit… <span>✦</span>'; button.disabled = true;
+        setTimeout(() => { button.innerHTML = 'Create my edit <span>→</span>'; button.disabled = false; renderProducts(); notify('Your personal wedding edit is ready.'); }, 650);
+      });
+      productGrid.addEventListener('click', event => {
+        const heart = event.target.closest('.heart'); if (!heart) return;
+        heart.classList.toggle('is-saved'); heart.textContent = heart.classList.contains('is-saved') ? '♥' : '♡';
+        notify(heart.classList.contains('is-saved') ? `${heart.dataset.name} saved to your moodboard.` : 'Removed from your moodboard.');
+      });
+      document.getElementById('viewAll').addEventListener('click', () => {
+        const total = editData[state.event][state.person].length;
+        if (state.limit < total) { state.limit = total; renderProducts(); } else { document.querySelector('#styler').scrollIntoView({ behavior: 'smooth' }); }
+      });
+      document.querySelectorAll('[data-select-event]').forEach(link => link.addEventListener('click', () => {
+        state.event = link.dataset.selectEvent; state.limit = 8; selectButton('#eventOptions', state.event, '[data-event]', 'event'); renderProducts();
+      }));
+      const preview = document.querySelector('.look-preview');
+      preview.addEventListener('pointermove', event => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const box = preview.getBoundingClientRect();
+        const x = (event.clientX - box.left) / box.width - .5;
+        const y = (event.clientY - box.top) / box.height - .5;
+        preview.style.setProperty('--tilt-x', `${-y * 7}deg`);
+        preview.style.setProperty('--tilt-y', `${x * 9}deg`);
+      });
+      preview.addEventListener('pointerleave', () => {
+        preview.style.setProperty('--tilt-x', '0deg');
+        preview.style.setProperty('--tilt-y', '0deg');
+      });
+      const heroLooks = [
+        { image: 'assets/hero-3d-editorial.png', alt: "Women's plum and gold wedding look", label: "WOMEN'S WEDDING EDIT", blueprint: 'Plum lehenga & gold zari', match: 'Made for a bridal moment', icon: '♡' },
+        { image: 'assets/hero-3d-man.png', alt: "Men's ivory sherwani wedding look", label: "MEN'S WEDDING EDIT", blueprint: 'Ivory sherwani & plum stole', match: 'A polished groom look', icon: '✦' },
+        { image: 'assets/hero-3d-child.png', alt: "Girl's plum lehenga wedding look", label: "GIRLS' WEDDING EDIT", blueprint: 'Plum lehenga & gold sparkle', match: 'Joyfully dressed for the day', icon: '✿' },
+        { image: 'assets/hero-3d-boy.png', alt: "Boy's ivory kurta and plum jacket look", label: "BOYS' WEDDING EDIT", blueprint: 'Ivory kurta & plum jacket', match: 'Ready for every ritual', icon: '✦' }
+      ];
+      const heroFrame = document.getElementById('heroImageFrame');
+      const heroImage = document.getElementById('heroImage');
+      const heroSlideLabel = document.getElementById('heroSlideLabel');
+      const heroBlueprint = document.getElementById('heroBlueprint');
+      const heroMatch = document.getElementById('heroMatch');
+      const heroMatchIcon = document.getElementById('heroMatchIcon');
+      let activeHeroLook = 0;
+      function rotateHeroLook() {
+        heroFrame.classList.add('is-switching');
+        window.setTimeout(() => {
+          activeHeroLook = (activeHeroLook + 1) % heroLooks.length;
+          const look = heroLooks[activeHeroLook];
+          heroImage.src = look.image;
+          heroImage.alt = look.alt;
+          heroSlideLabel.textContent = look.label;
+          heroBlueprint.textContent = look.blueprint;
+          heroMatch.textContent = look.match;
+          heroMatchIcon.textContent = look.icon;
+          heroFrame.classList.remove('is-switching');
+        }, 260);
+      }
+      window.setInterval(rotateHeroLook, 3000);
+
+      const aiState = { event: 'haldi', person: 'women', lastAction: null };
+      const aiEvents = { haldi: 'Haldi', mehndi: 'Mehndi', wedding: 'Wedding', prewedding: 'Pre-wedding' };
+      const aiMatchByEvent = { haldi: '94%', mehndi: '92%', wedding: '97%', prewedding: '90%' };
+      const aiThinkingMessages = [
+        'Found 12 wedding-ready ideas · filtering by your budget…',
+        'Matching your palette with current retailer picks…',
+        'Checking event fit, size confidence and style score…',
+        'Curating a lookbook that feels like you…'
+      ];
+      const aiLookFeed = document.getElementById('aiLookFeed');
+      const aiCollectionTitle = document.getElementById('aiCollectionTitle');
+      const aiMatchPercent = document.getElementById('aiMatchPercent');
+      const aiReply = document.getElementById('aiReply');
+      const aiUndo = document.getElementById('aiUndo');
+      const aiUndoMessage = document.getElementById('aiUndoMessage');
+      let aiUndoTimer;
+
+      function renderAiLooks() {
+        const products = editData[aiState.event][aiState.person].slice(0, 3);
+        aiCollectionTitle.textContent = `${aiEvents[aiState.event]} Collection`;
+        aiMatchPercent.textContent = aiMatchByEvent[aiState.event];
+        document.querySelectorAll('[data-ai-event]').forEach(tab => tab.classList.toggle('is-active', tab.dataset.aiEvent === aiState.event));
+        aiLookFeed.innerHTML = products.map(([name, price, store], index) => {
+          const visual = projectCardVisual(aiState.person, index);
+          const score = 98 - index * 5;
+          return `<article class="ai-look" data-look-index="${index}">
+            <div class="ai-look-image" style="background-image:url('${visual.image}');background-position:${visual.position}"></div>
+            <div class="ai-look-info"><strong class="ai-look-name">${name}</strong><div class="ai-look-meta"><b class="ai-look-price">${price}</b><span class="ai-score">${score}% match</span><span>${store} · in your edit</span></div></div>
+            <div class="ai-actions"><button type="button" data-ai-action="skip" aria-label="Skip ${name}">←</button><button type="button" data-ai-action="save" aria-label="Save ${name}">♡</button></div>
+            <div class="ai-look-reason">✦ ${index === 0 ? `Matches your ${aiEvents[aiState.event].toLowerCase()} mood` : 'A strong fit for your palette and budget'}</div>
+          </article>`;
+        }).join('');
+      }
+      function showAiUndo(message, undo) {
+        aiUndoMessage.textContent = message;
+        aiState.lastAction = undo;
+        aiUndo.classList.add('show');
+        clearTimeout(aiUndoTimer);
+        aiUndoTimer = setTimeout(() => aiUndo.classList.remove('show'), 3200);
+      }
+      function actOnAiLook(card, action) {
+        const title = card.querySelector('.ai-look-name').textContent;
+        const index = Number(card.dataset.lookIndex);
+        card.style.transform = `translateX(${action === 'save' ? 125 : -125}px) rotate(${action === 'save' ? 4 : -4}deg)`;
+        card.style.opacity = '0';
+        setTimeout(() => {
+          card.remove();
+          showAiUndo(action === 'save' ? `${title} saved to your moodboard.` : `${title} skipped.`, () => renderAiLooks());
+          if (!aiLookFeed.children.length) renderAiLooks();
+        }, 180);
+      }
+      document.getElementById('aiEventTabs').addEventListener('click', event => {
+        const button = event.target.closest('[data-ai-event]'); if (!button) return;
+        aiState.event = button.dataset.aiEvent;
+        aiReply.textContent = `Perfect — I’m refreshing your ${aiEvents[aiState.event]} edit with the strongest matches.`;
+        renderAiLooks();
+      });
+      aiLookFeed.addEventListener('click', event => {
+        const button = event.target.closest('[data-ai-action]'); if (!button) return;
+        const card = button.closest('.ai-look');
+        actOnAiLook(card, button.dataset.aiAction);
+      });
+      let swipeStartX = 0;
+      let swipeCard = null;
+      aiLookFeed.addEventListener('pointerdown', event => {
+        swipeCard = event.target.closest('.ai-look');
+        if (!swipeCard) return;
+        swipeStartX = event.clientX;
+        swipeCard.setPointerCapture?.(event.pointerId);
+        swipeCard.classList.add('is-swiping');
+      });
+      aiLookFeed.addEventListener('pointermove', event => {
+        if (!swipeCard) return;
+        const distance = event.clientX - swipeStartX;
+        swipeCard.style.transform = `translateX(${Math.max(-120, Math.min(120, distance))}px) rotate(${distance / 28}deg)`;
+      });
+      aiLookFeed.addEventListener('pointerup', event => {
+        if (!swipeCard) return;
+        const distance = event.clientX - swipeStartX;
+        const card = swipeCard;
+        swipeCard = null;
+        card.classList.remove('is-swiping');
+        if (Math.abs(distance) > 78) actOnAiLook(card, distance > 0 ? 'save' : 'skip');
+        else card.style.transform = '';
+      });
+      document.getElementById('aiUndoButton').addEventListener('click', () => {
+        aiState.lastAction?.();
+        aiUndo.classList.remove('show');
+      });
+      document.querySelectorAll('.ai-chip').forEach(chip => chip.addEventListener('click', () => {
+        document.querySelectorAll('.ai-chip').forEach(item => item.classList.remove('is-selected'));
+        chip.classList.add('is-selected');
+        aiReply.textContent = `${chip.textContent.trim()} noted — I’m using that colour signal in your next matches.`;
+      }));
+      document.getElementById('aiComposer').addEventListener('submit', event => {
+        event.preventDefault();
+        const input = document.getElementById('aiPrompt');
+        const prompt = input.value.trim();
+        if (!prompt) return;
+        const text = prompt.toLowerCase();
+        if (text.includes('mehndi')) aiState.event = 'mehndi';
+        else if (text.includes('pre-wedding') || text.includes('pre wedding')) aiState.event = 'prewedding';
+        else if (text.includes('wedding')) aiState.event = 'wedding';
+        else if (text.includes('haldi')) aiState.event = 'haldi';
+        aiState.person = /kid|child|boy|girl/.test(text) ? 'kids' : /men|man|groom|husband/.test(text) ? 'men' : 'women';
+        const bubble = document.createElement('div');
+        bubble.className = 'message user';
+        bubble.textContent = prompt;
+        document.getElementById('aiMessages').insertBefore(bubble, document.querySelector('.ai-chips'));
+        aiReply.textContent = `Got it — I’ve applied your request and refreshed the ${aiEvents[aiState.event]} recommendations.`;
+        input.value = '';
+        renderAiLooks();
+      });
+      let thinkingIndex = 0;
+      setInterval(() => {
+        thinkingIndex = (thinkingIndex + 1) % aiThinkingMessages.length;
+        document.getElementById('aiThinking').textContent = aiThinkingMessages[thinkingIndex];
+      }, 2600);
+      renderAiLooks();
+      renderProducts();
+    </script>
+  </body>
+</html>
