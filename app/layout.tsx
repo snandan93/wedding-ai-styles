@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Vow & Vogue | AI Wedding Planner',
+  title: 'Vivaah AI | Indian Wedding Stylist',
   description: 'Next.js wedding planner with AI orchestration, product ranking, RAG context, and MCP-style retailer tools.'
 };
 

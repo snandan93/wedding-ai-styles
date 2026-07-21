@@ -54,6 +54,37 @@ const colorSwatches: Record<string, string> = {
   silver: '#c7ccd3'
 };
 
+const inspirationLooks = [
+  {
+    event: 'Haldi',
+    title: 'Vibrant Sunshine',
+    detail: 'Yellow mirror-work lehenga',
+    match: 98,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBhiWp9IsXPALeWvlFvSfCefw-vJBa482dpVlT7pH0IHwpbmcs4Kt3PvkWKhTqBNvcMCr7nx-RBNDreN-Xi20g7MR-2ERGzZnWtOQtBIzTUux0uDYD84lTvxuuP-Q1_TDeE_pQXVsb4mEcUR44Nb5nSMQU8y49CIZ8pbBhLW7YSYGLNCBEurFyQtyL-VzjOGL8RJGM1Mp9g-FNTI9fnnFOuLerHrdfOgXygyvJiCk1cZ6N7O60M2NOMSg'
+  },
+  {
+    event: 'Mehndi',
+    title: 'Emerald Elegance',
+    detail: 'Green embroidered anarkali',
+    match: 95,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB0H6BYj7XPGvvdSIgj58nA43PNYZB3p1FWaeySfFo2U5G6e0xAPMOMtqKNEwKZ3Wo8bMcKh5PCHRrSZ7SLY69S_Qo8qCEg6CvQy4FrK9ns9YCym5qA3snp_ahyOrKZMPkLxOYsnMu-XxfhILMfKt9dJoE_l7vNrS-ArVPCH6Wo2KbMueCF0hXRBL6m9ZDWSzYLmiI4F4uueUc5ZjWj83gtYdB7AZMco0IRsQ-5Z7i7IL-1SGqmCdwDFw'
+  },
+  {
+    event: 'Wedding',
+    title: 'Regal Maroon',
+    detail: 'Classic zardosi lehenga',
+    match: 99,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDxpwuGsweQnbbAcM9GglgxRzQL91a6r7M5fcuX_md-LF9uhG1nkY4aeU-DRbrA80wKzWyVmn02z4rUMSMs-AKieF8wATcwCJ37pMFB4YiaSDdb9myAt09vsdJzmwSYxyvaLDM5hr3ze3_8dJsVW8V3pZVmi3XTiCiI-FsjWGDiXIz9kzmLkRIDkHmZ-shqlwKUOWKU7yEDqgm106DE8UJaqWojf60AzSJ2AKO1Cqj5ScjkkaMSg5cgzA'
+  },
+  {
+    event: 'Reception',
+    title: 'Champagne Sparkle',
+    detail: 'Contemporary sequin gown',
+    match: 92,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB-2VungN-gwnTrPaT2-e3SVy_J9vjz9Sf276aSNsFc9HORQk2DKvBmWepW5IBRag4pZTBASKP_Tt4Pnb2QPe2d9DzFiP3G6uJR2cbQattK8jA2CaExcotWL2XA15WN4FDBkwBpjQwOWkq1o1aIuvq_WJwJ6o9CaFzkIwab8kjXWAeayPBxGyTr3XXQbSzxRfrBYRUZzbeVzVbPmBOcVZOsMItmmcza4jL96u8VQ93z4jKd4tO95zIbrQ'
+  }
+];
+
 export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingPlannerProps) {
   const [preferences, setPreferences] = useState<Required<PlannerPreferences>>(initialPreferences);
   const [products, setProducts] = useState<RankedProduct[]>(initialProducts);
@@ -166,23 +197,46 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
     <main className="planner-page">
       <header className="planner-header">
         <a className="brand" href="/">
-          <span>V&V</span>
-          Vow & Vogue
+          Vivaah AI
         </a>
         <nav>
-          <a href="#planner">Planner</a>
-          <a href="#products">Products</a>
-          <a href="#chat">AI Chat</a>
+          <a href="#heritage">Heritage</a>
+          <a className="active" href="#planner">Stylist</a>
+          <a href="#showcase">Showcase</a>
+          <a href="#planner">Events</a>
         </nav>
+        <div className="header-actions" aria-label="Account actions"><span>♡</span><span>◎</span></div>
       </header>
 
       <section className="planner-hero">
-        <div>
-          <p className="eyebrow">Wedding planner</p>
-          <h1>Build a wedding edit</h1>
-          <p className="hero-copy">Theme, event, person, age, budget and color come together as one ranked shopping brief.</p>
+        <div className="hero-card">
+          <p className="eyebrow">Your personal AI stylist</p>
+          <h1>Find Your Perfect Wedding Look in 60 Seconds</h1>
+          <p className="hero-copy">AI-powered outfit ideas for Haldi, Mehndi, Sangeet, Wedding Day, Reception and more.</p>
+          <a className="primary-cta" href="#planner">Start Styling Me <span>→</span></a>
         </div>
       </section>
+
+      <section className="how-it-works" id="heritage">
+        <div className="section-heading"><p className="eyebrow">Effortlessly personal</p><h2>How It Works</h2><p>Your personalized styling journey in three simple steps.</p></div>
+        <div className="steps-grid">
+          <article><span>01</span><div className="step-icon">♙</div><h3>Tell Us About You</h3><p>Share your preferences, age, budget and the wedding event you are attending.</p></article>
+          <article><span>02</span><div className="step-icon">✦</div><h3>AI Magic</h3><p>Our stylist analyzes thousands of combinations to curate looks tailored to you.</p></article>
+          <article><span>03</span><div className="step-icon">♢</div><h3>Discover & Shop</h3><p>Review your bespoke outfits, compare matches and shop directly from trusted stores.</p></article>
+        </div>
+      </section>
+
+      <section className="inspiration" id="showcase">
+        <div className="section-heading left"><p className="eyebrow">Curated inspiration</p><h2>Popular Wedding Looks</h2><p>Modern heritage for every ceremony.</p></div>
+        <div className="look-grid">
+          {inspirationLooks.map(look => <article className="look-card" key={look.title}>
+            <div className="look-image"><img src={look.image} alt={look.detail} /><span className={`event-tag ${look.event.toLowerCase()}`}>{look.event}</span></div>
+            <div className="look-body"><div><h3>{look.title}</h3><p>{look.detail}</p></div><strong>✦ {look.match}% Match</strong></div>
+          </article>)}
+        </div>
+      </section>
+
+      <div className="stylist-intro"><p className="eyebrow">AI styling atelier</p><h2>Create Your Curated Look</h2><p>Set your preferences or describe exactly what you need. Your recommendations update instantly.</p></div>
 
       <section className="planner-shell" id="planner">
         <aside className="control-panel" aria-label="Wedding planner filters">
@@ -390,6 +444,7 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
           </section>
         </section>
       </section>
+      <footer className="site-footer"><div><strong>Vivaah AI</strong><p>Where modern heritage meets AI precision.</p></div><p>Curating your perfect Indian wedding wardrobe.</p></footer>
     </main>
   );
 }
