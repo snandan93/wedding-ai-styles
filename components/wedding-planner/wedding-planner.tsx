@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import type { PersonType, PlannerPreferences, PlannerResponse, RankedProduct, StoreName, WeddingEvent } from '@/lib/types';
 
 type WeddingPlannerProps = {
@@ -33,6 +33,9 @@ const people: Array<{ value: PersonType; label: string }> = [
 const themes = ['royal modern', 'floral pastel', 'minimal luxe', 'heritage glam'];
 const colors = ['yellow', 'green', 'red', 'champagne', 'blush', 'ivory'];
 const ageRanges = ['3-8', '9-16', '18-25', '18-35', '26-35', '36-50', '50+'];
+const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
+const bodyTypes = ['Petite', 'Straight', 'Curvy', 'Athletic', 'Plus size', 'Prefer not to say'];
+const skinTones = ['Fair', 'Light', 'Medium', 'Olive', 'Dusky', 'Deep', 'Prefer not to say'];
 const stores: Array<StoreName | 'All'> = ['All', 'Myntra', 'AJIO', 'Flipkart'];
 const quickPrompts = [
   'Man search under 4000 haldi dress',
@@ -102,6 +105,12 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
     notes: ['Breathable pieces, warm color, easy movement.']
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [journeyStep, setJourneyStep] = useState(0);
+  const [journeyComplete, setJourneyComplete] = useState(false);
+  const [size, setSize] = useState('M');
+  const [bodyType, setBodyType] = useState('Curvy');
+  const [skinTone, setSkinTone] = useState('Medium');
+  const [photoName, setPhotoName] = useState('');
 
   const budgetLabel = useMemo(
     () => `₹${preferences.budgetMin.toLocaleString('en-IN')} - ₹${preferences.budgetMax.toLocaleString('en-IN')}`,
@@ -154,44 +163,14 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
     await runPlannerSearch(message.trim());
   }
 
-  // Refresh the ranked grid whenever a panel filter changes — no chat message needed.
-  async function applyFilters(next: Required<PlannerPreferences>) {
-    setIsLoading(true);
-    setStoreFilter('All');
-    try {
-      const response = await fetch('/api/ai/planner', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: '', preferences: next })
-      });
-      const data = (await response.json()) as PlannerResponse;
-      setProducts(data.products);
-      setMoodboard(data.moodboard);
-    } catch {
-      /* keep current results if the request fails */
-    } finally {
-      setIsLoading(false);
-    }
+  async function generateCompleteLook() {
+    const eventLabel = events.find(item => item.value === preferences.event)?.label || preferences.event;
+    const personLabel = people.find(item => item.value === preferences.personType)?.label || preferences.personType;
+    const brief = `Create a complete ${preferences.theme} ${eventLabel} look for ${personLabel}, age ${preferences.ageRange}, size ${size}, ${bodyType} body type, ${skinTone} skin tone, in ${preferences.colorPreference}, between ₹${preferences.budgetMin} and ₹${preferences.budgetMax}. Include outfit and coordinating accessory guidance.`;
+    setJourneyComplete(true);
+    setMessage('');
+    await runPlannerSearch(brief);
   }
-
-  const didMount = useRef(false);
-  useEffect(() => {
-    if (!didMount.current) {
-      didMount.current = true;
-      return;
-    }
-    const timer = setTimeout(() => applyFilters(preferences), 300);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    preferences.theme,
-    preferences.event,
-    preferences.personType,
-    preferences.ageRange,
-    preferences.budgetMin,
-    preferences.budgetMax,
-    preferences.colorPreference
-  ]);
 
   return (
     <main className="planner-page">
@@ -238,115 +217,29 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
 
       <div className="stylist-intro"><p className="eyebrow">AI styling atelier</p><h2>Create Your Curated Look</h2><p>Set your preferences or describe exactly what you need. Your recommendations update instantly.</p></div>
 
-      <section className="planner-shell" id="planner">
-        <aside className="control-panel" aria-label="Wedding planner filters">
-          <div className="panel-heading">
-            <p className="eyebrow">Planner inputs</p>
-            <h2>Style brief</h2>
+      <section className={`planner-shell ${journeyComplete ? 'has-results' : 'journey-only'}`} id="planner">
+        <section className="consultation-panel" aria-label="Personal styling consultation">
+          <div className="journey-topline"><span>Personal styling consultation</span><strong>{journeyStep + 1} / 8</strong></div>
+          <div className="journey-progress"><span style={{ width: `${((journeyStep + 1) / 8) * 100}%` }} /></div>
+
+          <div className="journey-step" key={journeyStep}>
+            {journeyStep === 0 && <><p className="eyebrow">Let’s begin</p><h2>Who are you styling?</h2><p>Choose the person who will wear this look.</p><div className="choice-grid four">{people.map(item => <button className={preferences.personType === item.value ? 'is-selected' : ''} key={item.value} type="button" onClick={() => updatePreference('personType', item.value)}><span>{item.value === 'women' ? '♕' : item.value === 'men' ? '♙' : '✦'}</span>{item.label}</button>)}</div></>}
+            {journeyStep === 1 && <><p className="eyebrow">The celebration</p><h2>Which ceremony?</h2><p>Every event has its own palette, energy and traditions.</p><div className="choice-grid events">{events.map(item => <button className={preferences.event === item.value ? 'is-selected' : ''} key={item.value} type="button" onClick={() => updatePreference('event', item.value)}><span>✦</span>{item.label}</button>)}</div></>}
+            {journeyStep === 2 && <><p className="eyebrow">Fit profile</p><h2>What age and size?</h2><p>This helps us prioritize comfortable silhouettes and relevant products.</p><div className="form-pair"><label>Age range<select value={preferences.ageRange} onChange={event => updatePreference('ageRange', event.target.value)}>{ageRanges.map(range => <option key={range}>{range}</option>)}</select></label><label>Usual size<select value={size} onChange={event => setSize(event.target.value)}>{sizes.map(item => <option key={item}>{item}</option>)}</select></label></div></>}
+            {journeyStep === 3 && <><p className="eyebrow">Investment</p><h2>What is your budget?</h2><p>Set the total range you would like us to work within.</p><div className="form-pair"><label>Minimum<input min="0" step="500" type="number" value={preferences.budgetMin} onChange={event => updatePreference('budgetMin', Number(event.target.value))}/></label><label>Maximum<input min="1000" step="500" type="number" value={preferences.budgetMax} onChange={event => updatePreference('budgetMax', Number(event.target.value))}/></label></div><div className="budget-highlight">Your range <strong>{budgetLabel}</strong></div></>}
+            {journeyStep === 4 && <><p className="eyebrow">Your palette</p><h2>Which colors do you love?</h2><p>Select the lead color for your curated look.</p><div className="color-choice-grid">{colors.map(color => <button aria-label={color} className={preferences.colorPreference === color ? 'is-selected' : ''} key={color} type="button" onClick={() => updatePreference('colorPreference', color)}><i style={{background:colorSwatches[color]}} />{color}</button>)}</div></>}
+            {journeyStep === 5 && <><p className="eyebrow">Personal details</p><h2>Body type and skin tone</h2><p>These details help refine silhouettes and complementary colors.</p><div className="form-pair"><label>Body type<select value={bodyType} onChange={event => setBodyType(event.target.value)}>{bodyTypes.map(item => <option key={item}>{item}</option>)}</select></label><label>Skin tone<select value={skinTone} onChange={event => setSkinTone(event.target.value)}>{skinTones.map(item => <option key={item}>{item}</option>)}</select></label></div><p className="privacy-note">Used only for this recommendation. You can always choose “Prefer not to say.”</p></>}
+            {journeyStep === 6 && <><p className="eyebrow">Aesthetic direction</p><h2>What feels most like you?</h2><p>Choose the style language for your look.</p><div className="choice-grid themes">{themes.map(theme => <button className={preferences.theme === theme ? 'is-selected' : ''} key={theme} type="button" onClick={() => updatePreference('theme', theme)}><span>✧</span>{theme}</button>)}</div></>}
+            {journeyStep === 7 && <><p className="eyebrow">Final touch</p><h2>Add a reference photo</h2><p>Optional: upload an inspiration photo or an outfit you already own.</p><label className="photo-upload"><input accept="image/*" type="file" onChange={event => setPhotoName(event.target.files?.[0]?.name || '')}/><span>{photoName ? '✓' : '＋'}</span><strong>{photoName || 'Choose an image'}</strong><small>{photoName ? 'Ready to use as inspiration' : 'JPG, PNG or WEBP · optional'}</small></label><div className="brief-summary"><span>{people.find(item => item.value === preferences.personType)?.label}</span><span>{events.find(item => item.value === preferences.event)?.label}</span><span>{preferences.colorPreference}</span><span>{preferences.theme}</span><span>{budgetLabel}</span></div></>}
           </div>
 
-          <fieldset>
-            <legend>Theme</legend>
-            <div className="segmented-grid">
-              {themes.map(theme => (
-                <button
-                  className={preferences.theme === theme ? 'is-selected' : ''}
-                  key={theme}
-                  type="button"
-                  onClick={() => updatePreference('theme', theme)}
-                >
-                  {theme}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend>Event</legend>
-            <div className="chip-grid">
-              {events.map(item => (
-                <button
-                  className={preferences.event === item.value ? 'is-selected' : ''}
-                  key={item.value}
-                  type="button"
-                  onClick={() => updatePreference('event', item.value)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend>Person</legend>
-            <div className="person-grid">
-              {people.map(item => (
-                <button
-                  className={preferences.personType === item.value ? 'is-selected' : ''}
-                  key={item.value}
-                  type="button"
-                  onClick={() => updatePreference('personType', item.value)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          <div className="two-fields">
-            <label>
-              Age range
-              <select value={preferences.ageRange} onChange={event => updatePreference('ageRange', event.target.value)}>
-                {ageRanges.map(range => (
-                  <option key={range} value={range}>
-                    {range}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Color
-              <select value={preferences.colorPreference} onChange={event => updatePreference('colorPreference', event.target.value)}>
-                {colors.map(color => (
-                  <option key={color} value={color}>
-                    {color}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="journey-actions">
+            <button className="back-button" type="button" disabled={journeyStep === 0 || isLoading} onClick={() => setJourneyStep(step => step - 1)}>← Back</button>
+            {journeyStep < 7 ? <button className="next-button" type="button" onClick={() => setJourneyStep(step => step + 1)}>Continue →</button> : <button className="next-button generate" type="button" disabled={isLoading} onClick={generateCompleteLook}>{isLoading ? 'Curating your look…' : '✦ Generate My Complete Look'}</button>}
           </div>
+        </section>
 
-          <fieldset>
-            <legend>Budget range</legend>
-            <div className="budget-row">
-              <label>
-                Min
-                <input
-                  min="0"
-                  step="500"
-                  type="number"
-                  value={preferences.budgetMin}
-                  onChange={event => updatePreference('budgetMin', Number(event.target.value))}
-                />
-              </label>
-              <label>
-                Max
-                <input
-                  min="1000"
-                  step="500"
-                  type="number"
-                  value={preferences.budgetMax}
-                  onChange={event => updatePreference('budgetMax', Number(event.target.value))}
-                />
-              </label>
-            </div>
-            <div className="budget-meter">
-              <span>{budgetLabel}</span>
-            </div>
-          </fieldset>
-        </aside>
-
-        <section className="workspace">
+        <section className={`workspace ${journeyComplete ? '' : 'results-hidden'}`}>
           <section className="chat-panel" id="chat">
             <div className="panel-heading">
               <p className="eyebrow">AI chat planner</p>
