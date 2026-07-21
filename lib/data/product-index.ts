@@ -160,9 +160,68 @@ export const personConfigs: Record<PersonType, PersonConfig> = {
   }
 };
 
-// Real, verified products live in catalog.ts (see that file's header note).
-// The app reads this curated array directly instead of generating demo data.
-export const productIndex: Product[] = realProducts;
+const stores: StoreName[] = ['Myntra', 'Flipkart', 'AJIO'];
+const events = Object.keys(eventConfigs) as WeddingEvent[];
+const people = Object.keys(personConfigs) as PersonType[];
+
+const discoveryBrands: Record<StoreName, string[]> = {
+  Myntra: ['Anouk', 'House of Pataudi', 'Sangria', 'Indo Era', 'Vishudh', 'Kisah'],
+  Flipkart: ['Divastri', 'Majestic Man', 'Aurelia', 'Ethzy', 'Fashion Dream', 'Hangup'],
+  AJIO: ['AVAASA', 'Netplay', 'Fig', 'Azorte', 'DNMX', 'Performax']
+};
+
+const storeHome: Record<StoreName, string> = {
+  Myntra: 'https://www.myntra.com/',
+  Flipkart: 'https://www.flipkart.com/',
+  AJIO: 'https://www.ajio.com/'
+};
+
+/**
+ * A deterministic discovery catalog used to exercise every styling journey.
+ *
+ * These are search-ready recommendations, not claims about live retailer SKUs:
+ * they intentionally omit `productUrl`, and `searchProductIndex` replaces the
+ * placeholder URL with a retailer search for the selected color/category/event.
+ * Live MCP/feed adapters can replace these records without changing the UI.
+ */
+export const developmentProducts: Product[] = events.flatMap((event, eventIndex) =>
+  people.flatMap((personType, personIndex) =>
+    stores.flatMap((store, storeIndex) =>
+      Array.from({ length: 12 }, (_, itemIndex): Product => {
+        const eventConfig = eventConfigs[event];
+        const personConfig = personConfigs[personType];
+        const category = eventConfig.categories[personType][itemIndex % eventConfig.categories[personType].length];
+        const color = eventConfig.colors[itemIndex % eventConfig.colors.length];
+        const brand = discoveryBrands[store][itemIndex % discoveryBrands[store].length];
+        const imageCount = personType === 'boy' || personType === 'girl' ? 2 : 3;
+        const price = 699 + eventIndex * 275 + personIndex * 180 + storeIndex * 125 + itemIndex * 310;
+        const sequence = String(itemIndex + 1).padStart(2, '0');
+
+        return {
+          id: `discovery-${store.toLowerCase()}-${event}-${personType}-${sequence}`,
+          name: `${brand} ${eventConfig.label} ${category}`,
+          event,
+          personType,
+          ageRange: personConfig.defaultAgeRange,
+          price,
+          store,
+          category,
+          colors: [color, eventConfig.colors[(itemIndex + 1) % eventConfig.colors.length]],
+          themeTags: [...eventConfig.themes, eventConfig.heroColor.toLowerCase()],
+          image: personConfig.images[itemIndex % imageCount],
+          searchUrl: storeHome[store],
+          rating: Number((3.9 + (itemIndex % 9) * 0.1).toFixed(1)),
+          reviewCount: 80 + eventIndex * 37 + personIndex * 29 + storeIndex * 41 + itemIndex * 53,
+          inventoryScore: 72 + ((eventIndex + personIndex + storeIndex + itemIndex) % 25),
+          fitNotes: `${personConfig.label} ${eventConfig.label} discovery option; confirm size, price, and availability on ${store}.`
+        };
+      })
+    )
+  )
+);
+
+// Keep verified product pages first, then add balanced retailer discovery inventory.
+export const productIndex: Product[] = [...realProducts, ...developmentProducts];
 
 function parseAgeRange(range: string): [number, number] {
   const plus = range.match(/^\s*(\d+)\s*\+\s*$/);
@@ -207,6 +266,12 @@ export function searchProductIndex(preferences: PlannerPreferences = {}, query =
     if (value !== undefined) {
       Object.assign(normalized, { [key]: value });
     }
+  }
+
+  // A person selection without an explicit age should use that audience's age
+  // range; otherwise the adult default would silently hide Boy/Girl inventory.
+  if (preferences.personType && preferences.ageRange === undefined) {
+    normalized.ageRange = personConfigs[preferences.personType].defaultAgeRange;
   }
 
   normalized.colorPreference = normalized.colorPreference.toLowerCase();
