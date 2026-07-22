@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
-import type { PersonType, PlannerPreferences, PlannerResponse, RankedProduct, StoreName, WeddingEvent } from '@/lib/types';
+import type { BodyType, ClothingSize, PersonType, PlannerPreferences, PlannerResponse, RankedProduct, SkinTone, StoreName, WeddingEvent } from '@/lib/types';
 
 type WeddingPlannerProps = {
   initialProducts: RankedProduct[];
@@ -33,9 +33,9 @@ const people: Array<{ value: PersonType; label: string }> = [
 const themes = ['royal modern', 'floral pastel', 'minimal luxe', 'heritage glam'];
 const colors = ['yellow', 'green', 'red', 'champagne', 'blush', 'ivory'];
 const ageRanges = ['3-8', '9-16', '18-25', '18-35', '26-35', '36-50', '50+'];
-const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
-const bodyTypes = ['Petite', 'Straight', 'Curvy', 'Athletic', 'Plus size', 'Prefer not to say'];
-const skinTones = ['Fair', 'Light', 'Medium', 'Olive', 'Dusky', 'Deep', 'Prefer not to say'];
+const sizes: ClothingSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
+const bodyTypes: BodyType[] = ['Petite', 'Straight', 'Curvy', 'Athletic', 'Plus size', 'Prefer not to say'];
+const skinTones: SkinTone[] = ['Fair', 'Light', 'Medium', 'Olive', 'Dusky', 'Deep', 'Prefer not to say'];
 const stores: Array<StoreName | 'All'> = ['All', 'Myntra', 'AJIO', 'Flipkart'];
 const quickPrompts = [
   'Man search under 4000 haldi dress',
@@ -107,9 +107,6 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
   const [isLoading, setIsLoading] = useState(false);
   const [journeyStep, setJourneyStep] = useState(0);
   const [journeyComplete, setJourneyComplete] = useState(false);
-  const [size, setSize] = useState('M');
-  const [bodyType, setBodyType] = useState('Curvy');
-  const [skinTone, setSkinTone] = useState('Medium');
   const [photoName, setPhotoName] = useState('');
 
   const budgetLabel = useMemo(
@@ -166,7 +163,7 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
   async function generateCompleteLook() {
     const eventLabel = events.find(item => item.value === preferences.event)?.label || preferences.event;
     const personLabel = people.find(item => item.value === preferences.personType)?.label || preferences.personType;
-    const brief = `Create a complete ${preferences.theme} ${eventLabel} look for ${personLabel}, age ${preferences.ageRange}, size ${size}, ${bodyType} body type, ${skinTone} skin tone, in ${preferences.colorPreference}, between ₹${preferences.budgetMin} and ₹${preferences.budgetMax}. Include outfit and coordinating accessory guidance.`;
+    const brief = `Create a complete ${preferences.stylePreferences.join(', ')} ${eventLabel} look for ${personLabel}, age ${preferences.ageRange}, size ${preferences.size}, ${preferences.bodyType} body type, ${preferences.skinTone} skin tone, in ${preferences.preferredColors.join(', ')}, between ₹${preferences.budgetMin} and ₹${preferences.budgetMax}. Include outfit and coordinating accessory guidance.`;
     setJourneyComplete(true);
     setMessage('');
     await runPlannerSearch(brief);
@@ -225,11 +222,11 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
           <div className="journey-step" key={journeyStep}>
             {journeyStep === 0 && <><p className="eyebrow">Let’s begin</p><h2>Who are you styling?</h2><p>Choose the person who will wear this look.</p><div className="choice-grid four">{people.map(item => <button className={preferences.personType === item.value ? 'is-selected' : ''} key={item.value} type="button" onClick={() => updatePreference('personType', item.value)}><span>{item.value === 'women' ? '♕' : item.value === 'men' ? '♙' : '✦'}</span>{item.label}</button>)}</div></>}
             {journeyStep === 1 && <><p className="eyebrow">The celebration</p><h2>Which ceremony?</h2><p>Every event has its own palette, energy and traditions.</p><div className="choice-grid events">{events.map(item => <button className={preferences.event === item.value ? 'is-selected' : ''} key={item.value} type="button" onClick={() => updatePreference('event', item.value)}><span>✦</span>{item.label}</button>)}</div></>}
-            {journeyStep === 2 && <><p className="eyebrow">Fit profile</p><h2>What age and size?</h2><p>This helps us prioritize comfortable silhouettes and relevant products.</p><div className="form-pair"><label>Age range<select value={preferences.ageRange} onChange={event => updatePreference('ageRange', event.target.value)}>{ageRanges.map(range => <option key={range}>{range}</option>)}</select></label><label>Usual size<select value={size} onChange={event => setSize(event.target.value)}>{sizes.map(item => <option key={item}>{item}</option>)}</select></label></div></>}
+            {journeyStep === 2 && <><p className="eyebrow">Fit profile</p><h2>What age and size?</h2><p>This helps us prioritize comfortable silhouettes and relevant products.</p><div className="form-pair"><label>Age range<select value={preferences.ageRange} onChange={event => updatePreference('ageRange', event.target.value)}>{ageRanges.map(range => <option key={range}>{range}</option>)}</select></label><label>Usual size<select value={preferences.size} onChange={event => updatePreference('size', event.target.value as ClothingSize)}>{sizes.map(item => <option key={item}>{item}</option>)}</select></label></div></>}
             {journeyStep === 3 && <><p className="eyebrow">Investment</p><h2>What is your budget?</h2><p>Set the total range you would like us to work within.</p><div className="form-pair"><label>Minimum<input min="0" step="500" type="number" value={preferences.budgetMin} onChange={event => updatePreference('budgetMin', Number(event.target.value))}/></label><label>Maximum<input min="1000" step="500" type="number" value={preferences.budgetMax} onChange={event => updatePreference('budgetMax', Number(event.target.value))}/></label></div><div className="budget-highlight">Your range <strong>{budgetLabel}</strong></div></>}
-            {journeyStep === 4 && <><p className="eyebrow">Your palette</p><h2>Which colors do you love?</h2><p>Select the lead color for your curated look.</p><div className="color-choice-grid">{colors.map(color => <button aria-label={color} className={preferences.colorPreference === color ? 'is-selected' : ''} key={color} type="button" onClick={() => updatePreference('colorPreference', color)}><i style={{background:colorSwatches[color]}} />{color}</button>)}</div></>}
-            {journeyStep === 5 && <><p className="eyebrow">Personal details</p><h2>Body type and skin tone</h2><p>These details help refine silhouettes and complementary colors.</p><div className="form-pair"><label>Body type<select value={bodyType} onChange={event => setBodyType(event.target.value)}>{bodyTypes.map(item => <option key={item}>{item}</option>)}</select></label><label>Skin tone<select value={skinTone} onChange={event => setSkinTone(event.target.value)}>{skinTones.map(item => <option key={item}>{item}</option>)}</select></label></div><p className="privacy-note">Used only for this recommendation. You can always choose “Prefer not to say.”</p></>}
-            {journeyStep === 6 && <><p className="eyebrow">Aesthetic direction</p><h2>What feels most like you?</h2><p>Choose the style language for your look.</p><div className="choice-grid themes">{themes.map(theme => <button className={preferences.theme === theme ? 'is-selected' : ''} key={theme} type="button" onClick={() => updatePreference('theme', theme)}><span>✧</span>{theme}</button>)}</div></>}
+            {journeyStep === 4 && <><p className="eyebrow">Your palette</p><h2>Which colors do you love?</h2><p>Select the lead color for your curated look.</p><div className="color-choice-grid">{colors.map(color => <button aria-label={color} className={preferences.colorPreference === color ? 'is-selected' : ''} key={color} type="button" onClick={() => setPreferences(current => ({...current, colorPreference: color, preferredColors: [color]}))}><i style={{background:colorSwatches[color]}} />{color}</button>)}</div></>}
+            {journeyStep === 5 && <><p className="eyebrow">Personal details</p><h2>Body type and skin tone</h2><p>These details help refine silhouettes and complementary colors.</p><div className="form-pair"><label>Body type<select value={preferences.bodyType} onChange={event => updatePreference('bodyType', event.target.value as BodyType)}>{bodyTypes.map(item => <option key={item}>{item}</option>)}</select></label><label>Skin tone<select value={preferences.skinTone} onChange={event => updatePreference('skinTone', event.target.value as SkinTone)}>{skinTones.map(item => <option key={item}>{item}</option>)}</select></label></div><p className="privacy-note">Used only for this recommendation. You can always choose “Prefer not to say.”</p></>}
+            {journeyStep === 6 && <><p className="eyebrow">Aesthetic direction</p><h2>What feels most like you?</h2><p>Choose the style language for your look.</p><div className="choice-grid themes">{themes.map(theme => <button className={preferences.theme === theme ? 'is-selected' : ''} key={theme} type="button" onClick={() => setPreferences(current => ({...current, theme, stylePreferences: [theme]}))}><span>✧</span>{theme}</button>)}</div></>}
             {journeyStep === 7 && <><p className="eyebrow">Final touch</p><h2>Add a reference photo</h2><p>Optional: upload an inspiration photo or an outfit you already own.</p><label className="photo-upload"><input accept="image/*" type="file" onChange={event => setPhotoName(event.target.files?.[0]?.name || '')}/><span>{photoName ? '✓' : '＋'}</span><strong>{photoName || 'Choose an image'}</strong><small>{photoName ? 'Ready to use as inspiration' : 'JPG, PNG or WEBP · optional'}</small></label><div className="brief-summary"><span>{people.find(item => item.value === preferences.personType)?.label}</span><span>{events.find(item => item.value === preferences.event)?.label}</span><span>{preferences.colorPreference}</span><span>{preferences.theme}</span><span>{budgetLabel}</span></div></>}
           </div>
 

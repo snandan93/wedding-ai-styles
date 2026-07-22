@@ -254,7 +254,13 @@ export function getDefaultPreferences(): Required<PlannerPreferences> {
     ageRange: '18-35',
     budgetMin: 0,
     budgetMax: 7000,
-    colorPreference: 'yellow'
+    colorPreference: 'yellow',
+    preferredColors: ['yellow'],
+    size: 'M',
+    bodyType: 'Prefer not to say',
+    skinTone: 'Prefer not to say',
+    stylePreferences: ['royal modern'],
+    photoAssetId: ''
   };
 }
 

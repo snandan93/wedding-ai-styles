@@ -11,14 +11,22 @@
     "job:price-update": "tsx jobs/price-update.ts",
     "job:review-refresh": "tsx jobs/review-refresh.ts",
     "job:embedding-generation": "tsx jobs/embedding-generation.ts",
-    "job:ranking-recalculation": "tsx jobs/ranking-recalculation.ts"
+    "job:ranking-recalculation": "tsx jobs/ranking-recalculation.ts",
+    "mcp:myntra": "tsx mcp-servers/myntra/server.ts",
+    "mcp:flipkart": "tsx mcp-servers/flipkart/server.ts",
+    "mcp:ajio": "tsx mcp-servers/ajio/server.ts"
   },
   "dependencies": {
+    "@langchain/core": "^1.2.3",
+    "@langchain/langgraph": "^1.4.8",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

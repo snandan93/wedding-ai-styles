@@ -1,11 +1,31 @@
-import { generateShoppingQuery } from '@/lib/ai/agents/query-generator';
-import { runProductSearchAgent } from '@/lib/ai/agents/product-search';
 import { rankProducts } from '@/lib/ai/agents/ranking';
 import { summarizeReviews } from '@/lib/ai/agents/review-summarizer';
 import { generateThemeMoodboard } from '@/lib/ai/agents/theme-generator';
-import { runRagEngine } from '@/lib/ai/rag';
+import { runRetailerRetrievalGraph } from '@/lib/ai/graph/retailer-graph';
 import { rememberUserPreference } from '@/lib/data/user-memory';
-import type { PlannerPreferences, PlannerResponse } from '@/lib/types';
+import type { PlannerPreferences, PlannerResponse, Product, RetailerProduct } from '@/lib/types';
+
+function toLegacyProduct(product: RetailerProduct, preferences: Required<PlannerPreferences>): Product {
+  return {
+    id: product.id,
+    name: product.name,
+    event: product.event || preferences.event,
+    personType: product.personType || preferences.personType,
+    ageRange: preferences.ageRange,
+    price: product.price,
+    store: product.store,
+    category: product.category,
+    colors: product.colors,
+    themeTags: preferences.stylePreferences,
+    image: product.imageUrl,
+    searchUrl: product.productUrl,
+    productUrl: product.productUrl,
+    rating: product.rating || 0,
+    reviewCount: product.reviewCount || 0,
+    inventoryScore: product.inStock ? 100 : 0,
+    fitNotes: `${preferences.personType} ${preferences.event} pick — ${product.category}`
+  };
+}
 
 export async function runPlannerOrchestration({
   message,
@@ -16,9 +36,18 @@ export async function runPlannerOrchestration({
   preferences?: PlannerPreferences;
   userId?: string;
 }): Promise<PlannerResponse> {
-  const { inferredPreferences, generatedQueries } = generateShoppingQuery(message, preferences);
-  const ragContext = await runRagEngine(`${message} ${generatedQueries.join(' ')}`, inferredPreferences);
-  const products = await runProductSearchAgent(inferredPreferences, generatedQueries);
+  const graphState = await runRetailerRetrievalGraph({
+    requestId: crypto.randomUUID(),
+    userId,
+    message,
+    preferences: preferences || {}
+  });
+  const inferredPreferences = graphState.preferences as Required<PlannerPreferences>;
+  const generatedQueries = graphState.generatedQueries;
+  const ragContext = graphState.ragContext;
+  const products = Object.values(graphState.retailerResults)
+    .flatMap(retailerProducts => retailerProducts || [])
+    .map(product => toLegacyProduct(product, inferredPreferences));
   const reviewSummaries = await summarizeReviews(products);
   const rankedProducts = await rankProducts(products, inferredPreferences, reviewSummaries);
   const moodboard = await generateThemeMoodboard(inferredPreferences);

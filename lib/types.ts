@@ -6,6 +6,12 @@ export type BudgetRange = 'value' | 'mid' | 'premium' | 'luxury';
 
 export type StoreName = 'Myntra' | 'AJIO' | 'Flipkart';
 
+export type ClothingSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'Custom';
+
+export type BodyType = 'Petite' | 'Straight' | 'Curvy' | 'Athletic' | 'Plus size' | 'Prefer not to say';
+
+export type SkinTone = 'Fair' | 'Light' | 'Medium' | 'Olive' | 'Dusky' | 'Deep' | 'Prefer not to say';
+
 export type PlannerPreferences = {
   theme?: string;
   event?: WeddingEvent;
@@ -14,6 +20,12 @@ export type PlannerPreferences = {
   budgetMin?: number;
   budgetMax?: number;
   colorPreference?: string;
+  preferredColors?: string[];
+  size?: ClothingSize;
+  bodyType?: BodyType;
+  skinTone?: SkinTone;
+  stylePreferences?: string[];
+  photoAssetId?: string;
 };
 
 export type Product = {
@@ -67,3 +79,5 @@ export type McpToolResponse = {
   ok: boolean;
   data: unknown;
 };
+
+export type { CompleteLook, GraphError, PlannerGraphInput, PlannerGraphState, RetailerProduct } from '@/lib/ai/schemas';
