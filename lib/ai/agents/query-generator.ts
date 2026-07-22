@@ -1,4 +1,4 @@
-import { getDefaultPreferences } from '@/lib/data/product-index';
+import { getDefaultPreferences, personConfigs } from '@/lib/data/product-index';
 import type { PersonType, PlannerPreferences, WeddingEvent } from '@/lib/types';
 
 const eventKeywords: Array<[WeddingEvent, RegExp]> = [
@@ -72,6 +72,9 @@ export function generateShoppingQuery(message = '', preferences: PlannerPreferen
 
   if (eventMatch) inferred.event = eventMatch[0];
   if (personMatch) inferred.personType = personMatch[0];
+  if (preferences.ageRange === undefined && (preferences.personType || personMatch)) {
+    inferred.ageRange = personConfigs[inferred.personType].defaultAgeRange;
+  }
   if (colorMatch) inferred.colorPreference = colorMatch;
   inferred.budgetMin = budget.budgetMin ?? inferred.budgetMin;
   inferred.budgetMax = budget.budgetMax ?? inferred.budgetMax;
