@@ -24,10 +24,23 @@ const priceFilterParam = (min?: number, max?: number) => {
   return `?rf=${encodeURIComponent(`Price:${priceMin}.0_${priceMax}.0_${priceMin}.0 TO ${priceMax}.0`)}`;
 };
 
-const storeUrls: Record<StoreName, (query: string, budgetMin?: number, budgetMax?: number) => string> = {
-  Myntra: (query, budgetMin, budgetMax) => `https://www.myntra.com/${encodeURIComponent(query)}${priceFilterParam(budgetMin, budgetMax)}`,
-  AJIO: query => `https://www.ajio.com/search/?text=${encodeURIComponent(query)}`,
-  Flipkart: query => `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`
+// AJIO's search silently falls back to an irrelevant generic listing once a query
+// runs past ~3 tokens or carries modifier words — verified by testing the same
+// product query against ajio.com/myntra.com/flipkart.com directly: Myntra and
+// Flipkart return relevant results for the full "color category person event"
+// query, AJIO does not. Keep AJIO's query to color + the category's core noun
+// phrase (its last two words) so it stays inside the range AJIO matches well.
+function ajioSearchQuery(product: Product) {
+  const categoryWords = product.category.trim().split(/\s+/);
+  const coreCategory = categoryWords.slice(-2).join(' ');
+  return `${product.colors[0]} ${coreCategory}`;
+}
+
+const storeUrls: Record<StoreName, (product: Product, budgetMin?: number, budgetMax?: number) => string> = {
+  Myntra: (product, budgetMin, budgetMax) =>
+    `https://www.myntra.com/${encodeURIComponent(productSearchQuery(product))}${priceFilterParam(budgetMin, budgetMax)}`,
+  AJIO: product => `https://www.ajio.com/search/?text=${encodeURIComponent(ajioSearchQuery(product))}`,
+  Flipkart: product => `https://www.flipkart.com/search?q=${encodeURIComponent(productSearchQuery(product))}`
 };
 
 export const eventConfigs: Record<WeddingEvent, EventConfig> = {
@@ -309,6 +322,6 @@ export function searchProductIndex(preferences: PlannerPreferences = {}, query =
     .sort((a, b) => b.score - a.score)
     .map(item => ({
       ...item.product,
-      searchUrl: storeUrls[item.product.store](productSearchQuery(item.product), normalized.budgetMin, normalized.budgetMax)
+      searchUrl: storeUrls[item.product.store](item.product, normalized.budgetMin, normalized.budgetMax)
     }));
 }
