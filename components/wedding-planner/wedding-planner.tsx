@@ -1,7 +1,17 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, MouseEvent, useEffect, useMemo, useState } from 'react';
 import type { PersonType, PlannerPreferences, PlannerResponse, RankedProduct, StoreName, WeddingEvent } from '@/lib/types';
+import {
+  buildShareUrl,
+  getFavoriteProducts,
+  getSavedLooks,
+  readSharedPreferences,
+  removeLook,
+  saveLook,
+  toggleFavoriteProduct,
+  type SavedLook
+} from '@/lib/client/saved-looks';
 
 type WeddingPlannerProps = {
   initialProducts: RankedProduct[];
@@ -111,6 +121,23 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
   const [bodyType, setBodyType] = useState('Curvy');
   const [skinTone, setSkinTone] = useState('Medium');
   const [photoName, setPhotoName] = useState('');
+  const [savedLooks, setSavedLooks] = useState<SavedLook[]>([]);
+  const [favoriteProducts, setFavoriteProducts] = useState<RankedProduct[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerTab, setDrawerTab] = useState<'looks' | 'favorites'>('looks');
+
+  useEffect(() => {
+    setSavedLooks(getSavedLooks());
+    setFavoriteProducts(getFavoriteProducts());
+
+    const shared = readSharedPreferences();
+    if (shared) {
+      setPreferences(current => ({ ...current, ...shared }));
+      setJourneyStep(7);
+    }
+  }, []);
+
+  const favoriteIds = useMemo(() => new Set(favoriteProducts.map(product => product.id)), [favoriteProducts]);
 
   const budgetLabel = useMemo(
     () => `₹${preferences.budgetMin.toLocaleString('en-IN')} - ₹${preferences.budgetMax.toLocaleString('en-IN')}`,
@@ -172,6 +199,61 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
     await runPlannerSearch(brief);
   }
 
+  function toggleFavorite(event: MouseEvent, product: RankedProduct) {
+    event.preventDefault();
+    event.stopPropagation();
+    setFavoriteProducts(toggleFavoriteProduct(product));
+  }
+
+  function handleSaveLook() {
+    const eventLabel = events.find(item => item.value === preferences.event)?.label || preferences.event;
+    const updated = saveLook({
+      title: moodboard.title || `${eventLabel} look`,
+      preferences,
+      moodboard,
+      products
+    });
+    setSavedLooks(updated);
+    setMessages(current => [
+      ...current,
+      { role: 'assistant', text: `Saved "${moodboard.title}" to your looks. Find it anytime under ♡ Saved.` }
+    ]);
+  }
+
+  async function handleShareLook() {
+    const url = buildShareUrl(preferences);
+    const shareText = `${moodboard.title} — curated by Vivaah AI`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: moodboard.title, text: shareText, url });
+      } catch {
+        // user dismissed the native share sheet
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setMessages(current => [...current, { role: 'assistant', text: 'Share link copied to clipboard!' }]);
+    } catch {
+      setMessages(current => [...current, { role: 'assistant', text: `Share this link: ${url}` }]);
+    }
+  }
+
+  function loadSavedLook(look: SavedLook) {
+    setPreferences(look.preferences);
+    setMoodboard(look.moodboard);
+    setProducts(look.products);
+    setJourneyComplete(true);
+    setIsDrawerOpen(false);
+    setMessages(current => [...current, { role: 'assistant', text: `Loaded "${look.title}" from your saved looks.` }]);
+  }
+
+  function handleRemoveLook(id: string) {
+    setSavedLooks(removeLook(id));
+  }
+
   return (
     <main className="planner-page">
       <header className="planner-header">
@@ -184,7 +266,13 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
           <a href="#showcase">Showcase</a>
           <a href="#planner">Events</a>
         </nav>
-        <div className="header-actions" aria-label="Account actions"><span>♡</span><span>◎</span></div>
+        <div className="header-actions" aria-label="Account actions">
+          <button type="button" className="icon-button" aria-label="Saved looks and favorites" onClick={() => setIsDrawerOpen(true)}>
+            ♡
+            {savedLooks.length + favoriteProducts.length > 0 && <span className="badge">{savedLooks.length + favoriteProducts.length}</span>}
+          </button>
+          <span>◎</span>
+        </div>
       </header>
 
       <section className="planner-hero">
@@ -242,8 +330,14 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
         <section className={`workspace ${journeyComplete ? '' : 'results-hidden'}`}>
           <section className="chat-panel" id="chat">
             <div className="panel-heading">
-              <p className="eyebrow">AI chat planner</p>
-              <h2>{moodboard.title}</h2>
+              <div>
+                <p className="eyebrow">AI chat planner</p>
+                <h2>{moodboard.title}</h2>
+              </div>
+              <div className="panel-actions">
+                <button type="button" className="ghost-button" onClick={handleSaveLook}>♡ Save look</button>
+                <button type="button" className="ghost-button" onClick={handleShareLook}>↗ Share</button>
+              </div>
             </div>
             <div className="palette-row" aria-label="Moodboard palette">
               {moodboard.palette.map(color => (
@@ -315,6 +409,14 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
                       }}
                     />
                     <span>{product.matchScore}% match</span>
+                    <button
+                      type="button"
+                      className={`favorite-toggle ${favoriteIds.has(product.id) ? 'is-favorited' : ''}`}
+                      aria-label={favoriteIds.has(product.id) ? `Remove ${product.name} from favorites` : `Save ${product.name} to favorites`}
+                      onClick={event => toggleFavorite(event, product)}
+                    >
+                      {favoriteIds.has(product.id) ? '♥' : '♡'}
+                    </button>
                   </div>
                   <div className="product-body">
                     <div>
@@ -338,6 +440,76 @@ export function WeddingPlanner({ initialProducts, initialPreferences }: WeddingP
         </section>
       </section>
       <footer className="site-footer"><div><strong>Vivaah AI</strong><p>Where modern heritage meets AI precision.</p></div><p>Curating your perfect Indian wedding wardrobe.</p></footer>
+
+      {isDrawerOpen && (
+        <div className="drawer-overlay" onClick={() => setIsDrawerOpen(false)}>
+          <aside className="saved-drawer" onClick={event => event.stopPropagation()}>
+            <div className="drawer-header">
+              <h3>Your saved styling</h3>
+              <button type="button" className="drawer-close" aria-label="Close" onClick={() => setIsDrawerOpen(false)}>✕</button>
+            </div>
+            <div className="drawer-tabs">
+              <button type="button" className={drawerTab === 'looks' ? 'is-selected' : ''} onClick={() => setDrawerTab('looks')}>
+                Saved looks ({savedLooks.length})
+              </button>
+              <button type="button" className={drawerTab === 'favorites' ? 'is-selected' : ''} onClick={() => setDrawerTab('favorites')}>
+                Favorites ({favoriteProducts.length})
+              </button>
+            </div>
+
+            {drawerTab === 'looks' ? (
+              savedLooks.length ? (
+                <div className="saved-look-list">
+                  {savedLooks.map(look => (
+                    <article className="saved-look-card" key={look.id}>
+                      <div className="mini-palette">
+                        {look.moodboard.palette.map(color => (
+                          <span key={color} style={{ background: colorSwatches[color] || color }} />
+                        ))}
+                      </div>
+                      <div>
+                        <strong>{look.title}</strong>
+                        <small>{new Date(look.savedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</small>
+                      </div>
+                      <div className="saved-look-actions">
+                        <button type="button" onClick={() => loadSavedLook(look)}>View</button>
+                        <button type="button" className="text-button" onClick={() => handleRemoveLook(look.id)}>Remove</button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="empty-state">No saved looks yet. Generate a look and tap “Save look”.</p>
+              )
+            ) : favoriteProducts.length ? (
+              <div className="saved-look-list">
+                {favoriteProducts.map(product => (
+                  <article className="saved-look-card" key={product.id}>
+                    <img
+                      className="favorite-thumb"
+                      src={product.image}
+                      alt={product.name}
+                      onError={event => {
+                        event.currentTarget.src = '/assets/hero-3d-editorial.png';
+                      }}
+                    />
+                    <div>
+                      <strong>{product.name}</strong>
+                      <small>₹{product.price.toLocaleString('en-IN')} · {product.store}</small>
+                    </div>
+                    <div className="saved-look-actions">
+                      <a href={product.productUrl || product.searchUrl} target="_blank" rel="noreferrer">View</a>
+                      <button type="button" className="text-button" onClick={() => setFavoriteProducts(toggleFavoriteProduct(product))}>Remove</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="empty-state">No favorites yet. Tap the heart on any product.</p>
+            )}
+          </aside>
+        </div>
+      )}
     </main>
   );
 }
