@@ -4,6 +4,12 @@ Next.js wedding planner scaffold for AI-assisted Indian wedding styling.
 
 The old `index.html` prototype is still present as a static reference. The active app architecture now lives in the Next.js folders.
 
+## Screenshots
+
+| Find your look | Style consultation | AI-ranked results |
+|---|---|---|
+| ![Hero](docs/screenshots/01-hero.png) | ![Styling flow](docs/screenshots/02-styling.png) | ![Results](docs/screenshots/03-results.png) |
+
 ## Run Locally
 
 ```bash
