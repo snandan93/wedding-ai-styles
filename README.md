@@ -1,5 +1,7 @@
 # Vow & Vogue
 
+[![Live Demo](https://img.shields.io/badge/demo-wedding--ai--styles.vercel.app-black?logo=vercel)](https://wedding-ai-styles.vercel.app)
+
 Next.js wedding planner scaffold for AI-assisted Indian wedding styling.
 
 The old `index.html` prototype is still present as a static reference. The active app architecture now lives in the Next.js folders.
