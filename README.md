@@ -13,6 +13,10 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+```bash
+npm run lint
+```
+
 ## Architecture Map
 
 - User Website: `app/page.tsx`, `components/wedding-planner/*`, `app/globals.css`
